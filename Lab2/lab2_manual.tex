@@ -1,0 +1,378 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{verbatim}
+
+\onehalfspacing
+
+\definecolor{boxgray}{rgb}{0.93,0.93,0.93}
+
+% A simple shaded definition box
+\newcommand{\defbox}[2]{%
+  \vspace{0.2cm}
+  \noindent\colorbox{boxgray}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+    \textbf{#1:} #2
+  }}
+  \vspace{0.2cm}
+}
+
+% Placeholder box for screenshots to be inserted after completing the lab
+\newcommand{\screenshotplaceholder}[2]{%
+  \begin{figure}[H]
+      \centering
+      \fbox{\parbox[c][#1][c]{0.9\linewidth}{\centering #2}}
+  \end{figure}
+}
+
+\begin{document}
+
+% -------------------------------------------------------------
+% Header
+% -------------------------------------------------------------
+\begin{center}
+    {\Large \textbf{CSE312: Database Management Systems Lab}}\\[0.3cm]
+    {\large \textbf{Lab 02: PostgreSQL DDL Statements}}
+\end{center}
+
+\vspace{0.5cm}
+
+% -------------------------------------------------------------
+% 1. Objective
+% -------------------------------------------------------------
+\section*{1. Objective}
+The objectives of this experiment are:
+\begin{itemize}
+    \item To understand the purpose of Data Definition Language (DDL) in PostgreSQL.
+    \item To create and manage databases, schemas, and tables using PostgreSQL commands.
+    \item To define table columns with suitable data types and constraints.
+    \item To modify existing database objects using \texttt{ALTER} statements.
+    \item To remove database objects safely using \texttt{DROP} and \texttt{TRUNCATE} statements.
+\end{itemize}
+
+% -------------------------------------------------------------
+% 2. Introduction
+% -------------------------------------------------------------
+\section*{2. Introduction}
+Data Definition Language (DDL) is a part of SQL used to define, modify, and remove database
+structures. In PostgreSQL, DDL statements are used to create databases, schemas, tables, constraints,
+indexes, views, and other database objects.
+
+This lab focuses on the most commonly used PostgreSQL DDL statements:
+\begin{itemize}
+    \item \texttt{CREATE} -- creates a new database object.
+    \item \texttt{ALTER} -- modifies an existing database object.
+    \item \texttt{DROP} -- permanently removes a database object.
+    \item \texttt{TRUNCATE} -- removes all rows from a table while keeping the table structure.
+\end{itemize}
+
+\noindent\textbf{Required software:}
+\begin{itemize}
+    \item PostgreSQL Server
+    \item pgAdmin or psql command-line tool
+\end{itemize}
+
+\screenshotplaceholder{5cm}{Screenshot Placeholder: PostgreSQL server or pgAdmin dashboard}
+
+% -------------------------------------------------------------
+% 3. Theory
+% -------------------------------------------------------------
+\section*{3. Theory}
+
+\subsection*{3.1 Data Definition Language}
+\defbox{DDL}{Data Definition Language is the subset of SQL used to define and manage the structure of a database. DDL commands affect database objects such as databases, schemas, tables, and constraints.}
+
+\noindent Common DDL statements are summarized below:
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{>{\bfseries}p{3cm} p{9cm}}
+\toprule
+Statement & Purpose \\
+\midrule
+CREATE & Creates a database object such as a database, schema, or table. \\
+ALTER & Modifies the structure of an existing database object. \\
+DROP & Deletes a database object permanently. \\
+TRUNCATE & Removes all rows from a table without deleting the table itself. \\
+\bottomrule
+\end{tabular}
+\caption{Common PostgreSQL DDL statements}
+\label{tab:ddl_statements}
+\end{table}
+
+\subsection*{3.2 PostgreSQL Data Types}
+Choosing appropriate data types is important because data types control what kind of values can be
+stored in each column.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{>{\bfseries}p{4cm} p{8cm}}
+\toprule
+Data Type & Description \\
+\midrule
+INTEGER & Stores whole numbers. \\
+SERIAL & Auto-incrementing integer, commonly used for primary keys. \\
+VARCHAR(n) & Stores variable-length character strings with a maximum length. \\
+TEXT & Stores variable-length text without a fixed maximum length. \\
+NUMERIC(p, s) & Stores exact decimal values with precision and scale. \\
+DATE & Stores calendar dates. \\
+TIMESTAMP & Stores date and time values. \\
+BOOLEAN & Stores true or false values. \\
+\bottomrule
+\end{tabular}
+\caption{Frequently used PostgreSQL data types}
+\label{tab:data_types}
+\end{table}
+
+\subsection*{3.3 Constraints}
+\defbox{Constraint}{A constraint is a rule applied to a table column or a group of columns to maintain data accuracy and integrity.}
+
+\noindent Common constraints include:
+\begin{itemize}
+    \item \texttt{PRIMARY KEY}: uniquely identifies each row in a table.
+    \item \texttt{FOREIGN KEY}: links a column to the primary key of another table.
+    \item \texttt{NOT NULL}: prevents a column from storing null values.
+    \item \texttt{UNIQUE}: ensures all values in a column are different.
+    \item \texttt{CHECK}: ensures values satisfy a specified condition.
+    \item \texttt{DEFAULT}: assigns a value automatically when no value is provided.
+\end{itemize}
+
+% -------------------------------------------------------------
+% 4. Procedure
+% -------------------------------------------------------------
+\section*{4. Procedure}
+
+\subsection*{4.1 Connecting to PostgreSQL}
+Open pgAdmin or the psql command-line tool and connect to the PostgreSQL server using a valid
+username and password.
+
+\begin{verbatim}
+psql -U postgres
+\end{verbatim}
+
+\screenshotplaceholder{5cm}{Screenshot Placeholder: Successful connection to PostgreSQL}
+
+\subsection*{4.2 Creating a Database}
+Use the \texttt{CREATE DATABASE} statement to create a new database for this lab.
+
+\begin{verbatim}
+CREATE DATABASE university_lab;
+\end{verbatim}
+
+After creating the database, connect to it.
+
+\begin{verbatim}
+\c university_lab
+\end{verbatim}
+
+\screenshotplaceholder{5cm}{Screenshot Placeholder: Database creation and connection output}
+
+\subsection*{4.3 Creating a Schema}
+A schema is a logical container for database objects. It helps organize tables and other objects.
+
+\begin{verbatim}
+CREATE SCHEMA academics;
+\end{verbatim}
+
+Set the search path so PostgreSQL uses this schema by default.
+
+\begin{verbatim}
+SET search_path TO academics;
+\end{verbatim}
+
+\subsection*{4.4 Creating Tables}
+The \texttt{CREATE TABLE} statement defines a new table, its columns, data types, and constraints.
+
+\begin{verbatim}
+CREATE TABLE department (
+    dept_id SERIAL PRIMARY KEY,
+    dept_name VARCHAR(100) NOT NULL UNIQUE,
+    location VARCHAR(100)
+);
+\end{verbatim}
+
+\begin{verbatim}
+CREATE TABLE student (
+    student_id SERIAL PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    date_of_birth DATE,
+    admission_year INTEGER CHECK (admission_year >= 2000),
+    dept_id INTEGER REFERENCES department(dept_id)
+);
+\end{verbatim}
+
+\begin{verbatim}
+CREATE TABLE course (
+    course_id SERIAL PRIMARY KEY,
+    course_code VARCHAR(20) NOT NULL UNIQUE,
+    course_title VARCHAR(150) NOT NULL,
+    credit NUMERIC(3, 1) CHECK (credit > 0),
+    dept_id INTEGER NOT NULL REFERENCES department(dept_id)
+);
+\end{verbatim}
+
+\screenshotplaceholder{6cm}{Screenshot Placeholder: Table creation statements executed successfully}
+
+\subsection*{4.5 Creating a Table with Composite Primary Key}
+A composite primary key is formed using two or more columns. It is useful for junction tables.
+
+\begin{verbatim}
+CREATE TABLE enrollment (
+    student_id INTEGER REFERENCES student(student_id),
+    course_id INTEGER REFERENCES course(course_id),
+    enrollment_date DATE DEFAULT CURRENT_DATE,
+    grade VARCHAR(2),
+    PRIMARY KEY (student_id, course_id)
+);
+\end{verbatim}
+
+\subsection*{4.6 Viewing Table Structure}
+In psql, the \texttt{\textbackslash d} command can be used to view the structure of a table.
+
+\begin{verbatim}
+\d department
+\d student
+\d course
+\d enrollment
+\end{verbatim}
+
+\screenshotplaceholder{6cm}{Screenshot Placeholder: Table descriptions showing columns and constraints}
+
+\subsection*{4.7 Modifying Tables with ALTER}
+Use \texttt{ALTER TABLE} to modify an existing table structure.
+
+\noindent Add a new column:
+\begin{verbatim}
+ALTER TABLE student
+ADD COLUMN phone VARCHAR(20);
+\end{verbatim}
+
+\noindent Rename a column:
+\begin{verbatim}
+ALTER TABLE student
+RENAME COLUMN phone TO contact_number;
+\end{verbatim}
+
+\noindent Change a column data type:
+\begin{verbatim}
+ALTER TABLE student
+ALTER COLUMN contact_number TYPE VARCHAR(30);
+\end{verbatim}
+
+\noindent Add a constraint:
+\begin{verbatim}
+ALTER TABLE enrollment
+ADD CONSTRAINT grade_check
+CHECK (grade IN ('A+', 'A', 'B+', 'B', 'C+', 'C', 'D', 'F'));
+\end{verbatim}
+
+\screenshotplaceholder{6cm}{Screenshot Placeholder: ALTER TABLE statements and updated table structure}
+
+\subsection*{4.8 Renaming and Dropping Database Objects}
+Rename a table using \texttt{ALTER TABLE}.
+
+\begin{verbatim}
+ALTER TABLE course
+RENAME TO offered_course;
+\end{verbatim}
+
+Drop a table only when it is no longer needed. The \texttt{IF EXISTS} clause prevents an error if the
+table does not exist.
+
+\begin{verbatim}
+DROP TABLE IF EXISTS temporary_table;
+\end{verbatim}
+
+\subsection*{4.9 Truncating a Table}
+The \texttt{TRUNCATE} statement removes all rows from a table while keeping the table structure.
+
+\begin{verbatim}
+TRUNCATE TABLE enrollment;
+\end{verbatim}
+
+If another table references the table, use \texttt{CASCADE} carefully.
+
+\begin{verbatim}
+TRUNCATE TABLE enrollment CASCADE;
+\end{verbatim}
+
+\screenshotplaceholder{5cm}{Screenshot Placeholder: TRUNCATE or DROP command execution}
+
+% -------------------------------------------------------------
+% 5. Observations
+% -------------------------------------------------------------
+\section*{5. Observations}
+\begin{itemize}
+    \item A new PostgreSQL database was created and selected successfully.
+    \item A schema was created to organize database objects.
+    \item Tables were created with appropriate data types and constraints.
+    \item Primary key and foreign key constraints were used to maintain entity integrity and referential integrity.
+    \item Existing table structures were modified using \texttt{ALTER TABLE}.
+    \item Rows were removed using \texttt{TRUNCATE} without deleting the table definition.
+\end{itemize}
+
+% -------------------------------------------------------------
+% 6. Lab Task
+% -------------------------------------------------------------
+\section*{6. Lab Task}
+
+\subsection*{Task A: Library Management Database}
+Create a PostgreSQL database named \texttt{library\_lab}. Then create the following tables using DDL
+statements:
+
+\begin{enumerate}
+    \item \texttt{publisher}: stores publisher information.
+    \item \texttt{book}: stores book information and references \texttt{publisher}.
+    \item \texttt{member}: stores library member information.
+    \item \texttt{borrow}: stores borrowing records and references \texttt{book} and \texttt{member}.
+\end{enumerate}
+
+\noindent Requirements:
+\begin{itemize}
+    \item Use suitable data types for all columns.
+    \item Define primary keys for all tables.
+    \item Define foreign keys where necessary.
+    \item Add at least one \texttt{UNIQUE}, one \texttt{NOT NULL}, one \texttt{CHECK}, and one \texttt{DEFAULT} constraint.
+    \item Use \texttt{ALTER TABLE} to add one new column to any table.
+    \item Capture screenshots of the SQL commands and table structures.
+\end{itemize}
+
+\screenshotplaceholder{7cm}{Screenshot Placeholder: Completed Task A DDL statements and output}
+
+\subsection*{Task B: Hospital Management Database}
+Write PostgreSQL DDL statements for a hospital management database containing the following tables:
+\texttt{department}, \texttt{doctor}, \texttt{patient}, and \texttt{appointment}.
+
+\noindent Requirements:
+\begin{itemize}
+    \item Each doctor must belong to a department.
+    \item Each appointment must reference one doctor and one patient.
+    \item Appointment dates should have a default value of the current date.
+    \item Consultation fees must be greater than or equal to zero.
+    \item Add suitable primary key, foreign key, unique, not null, default, and check constraints.
+    \item Include screenshots of the commands and the final table descriptions.
+\end{itemize}
+
+\screenshotplaceholder{7cm}{Screenshot Placeholder: Completed Task B DDL statements and output}
+
+% -------------------------------------------------------------
+% 7. Conclusion
+% -------------------------------------------------------------
+\section*{7. Conclusion}
+This experiment introduced PostgreSQL Data Definition Language statements for creating and managing
+database structures. Students practiced creating databases, schemas, and tables; defining data types
+and constraints; modifying table definitions; and removing or clearing database objects. These DDL
+skills provide the foundation for building relational database schemas before inserting and querying
+data in later experiments.
+
+\end{document}
