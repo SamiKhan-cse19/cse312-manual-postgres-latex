@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1780301226.56122 "d:/MSK/CSE312/PostgreSQL-Manual/Lab2/lab2_manual.tex" "lab2_manual.pdf" "lab2_manual" 1780301227.48722 0
+["pdflatex"] 1780367276.12927 "d:/MSK/CSE312/PostgreSQL-Manual/Lab2/lab2_manual.tex" "lab2_manual.pdf" "lab2_manual" 1780367276.74367 0
   "C:/Program Files/MiKTeX/fonts/tfm/jknappen/ec/tcrm1200.tfm" 993062508 1444 95ffe0f19b974d50849790c8225c7ef7 ""
   "C:/Program Files/MiKTeX/fonts/tfm/public/cm/cmbx12.tfm" 1136765053 1324 c910af8c371558dc20f2d7822f66fe64 ""
   "C:/Program Files/MiKTeX/fonts/tfm/public/cm/cmmi12.tfm" 1136765053 1524 4414a8315f39513458b80dfc63bff03a ""
@@ -62,15 +62,16 @@
   "C:/Program Files/MiKTeX/tex/latex/setspace/setspace.sty" 1670403145 22490 8cac309b79a4c53a4ffce4b1b07aead0 ""
   "C:/Program Files/MiKTeX/tex/latex/tools/array.sty" 1761901070 15651 9d7c62df82cb29a555c00550babfe364 ""
   "C:/Program Files/MiKTeX/tex/latex/tools/verbatim.sty" 1761901070 7532 26d26e9d8f2ca784270d5da8ec7d102b ""
+  "C:/Program Files/MiKTeX/tex/latex/upquote/upquote.sty" 1335534756 1088 517e01cde97c1c0baf72e69d43aa5a2e ""
   "C:/Program Files/MiKTeX/tex/latex/url/url.sty" 1388490452 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
   "C:/Program Files/MiKTeX/tex/latex/xcolor/xcolor.sty" 1729265222 55384 b454dec21c2d9f45ec0b793f0995b992 ""
   "C:/Users/ACER/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1780297523 80909 eab91d9745dd2edfd62a31d53cd5fe15 ""
   "C:/Users/ACER/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcrm1200.pk" 1780300455 14064 f80fb790b6eec33f1a09cc6266bd5ea7 ""
   "C:/Users/ACER/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1780300039 13323416 520b45a907d3481e0598136fcaa55f66 ""
-  "d:/MSK/CSE312/PostgreSQL-Manual/Lab2/lab2_manual.tex" 1780301145 13176 90dd5e67ae5c175680580be293bc06b9 ""
-  "lab2_manual.aux" 1780301227 617 8c993ab3d3f626107c46df8b036f260b "pdflatex"
-  "lab2_manual.out" 1780301227 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
-  "lab2_manual.tex" 1780301145 13176 90dd5e67ae5c175680580be293bc06b9 ""
+  "d:/MSK/CSE312/PostgreSQL-Manual/Lab2/lab2_manual.tex" 1780367275 18367 5eefbd1259a282520b5a807414efad3c ""
+  "lab2_manual.aux" 1780367276 612 0b8279a14fcd235583ed8e5439bd49c9 "pdflatex"
+  "lab2_manual.out" 1780367276 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
+  "lab2_manual.tex" 1780367275 18367 5eefbd1259a282520b5a807414efad3c ""
   (generated)
   "lab2_manual.aux"
   "lab2_manual.log"

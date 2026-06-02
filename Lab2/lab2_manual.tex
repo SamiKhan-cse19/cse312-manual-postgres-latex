@@ -9,6 +9,8 @@
 \usepackage{array}
 \usepackage{float}
 \usepackage{verbatim}
+\usepackage{upquote}
+
 
 \onehalfspacing
 
@@ -38,7 +40,7 @@
 % -------------------------------------------------------------
 \begin{center}
     {\Large \textbf{CSE312: Database Management Systems Lab}}\\[0.3cm]
-    {\large \textbf{Lab 02: PostgreSQL DDL Statements}}
+    {\large \textbf{Lab 02: Introduction to PostgreSQL and SQL DDL Statements}}
 \end{center}
 
 \vspace{0.5cm}
@@ -49,28 +51,22 @@
 \section*{1. Objective}
 The objectives of this experiment are:
 \begin{itemize}
-    \item To understand the purpose of Data Definition Language (DDL) in PostgreSQL.
-    \item To create and manage databases, schemas, and tables using PostgreSQL commands.
-    \item To define table columns with suitable data types and constraints.
-    \item To modify existing database objects using \texttt{ALTER} statements.
-    \item To remove database objects safely using \texttt{DROP} and \texttt{TRUNCATE} statements.
+    \item To become familiar with PostgreSQL and basic database navigation commands.
+    \item To understand relational database concepts such as tables, columns, rows, keys, and constraints.
+    \item To create tables using PostgreSQL Data Definition Language (DDL) statements.
+    \item To modify table structures using essential \texttt{ALTER TABLE} commands.
+    \item To use \texttt{DROP} and \texttt{TRUNCATE} commands safely.
+    \item To insert sample records and view table data for verification.
 \end{itemize}
 
 % -------------------------------------------------------------
-% 2. Introduction
+% 2. Introduction to PostgreSQL
 % -------------------------------------------------------------
-\section*{2. Introduction}
-Data Definition Language (DDL) is a part of SQL used to define, modify, and remove database
-structures. In PostgreSQL, DDL statements are used to create databases, schemas, tables, constraints,
-indexes, views, and other database objects.
+\section*{2. Introduction to PostgreSQL}
+\defbox{PostgreSQL}{PostgreSQL is an open-source object-relational database management system. It is widely used for storing, organizing, and managing structured data.}
 
-This lab focuses on the most commonly used PostgreSQL DDL statements:
-\begin{itemize}
-    \item \texttt{CREATE} -- creates a new database object.
-    \item \texttt{ALTER} -- modifies an existing database object.
-    \item \texttt{DROP} -- permanently removes a database object.
-    \item \texttt{TRUNCATE} -- removes all rows from a table while keeping the table structure.
-\end{itemize}
+PostgreSQL supports standard SQL along with many advanced database features. In this lab, students
+will use PostgreSQL to create a small relational database and practice basic database commands.
 
 \noindent\textbf{Required software:}
 \begin{itemize}
@@ -78,38 +74,94 @@ This lab focuses on the most commonly used PostgreSQL DDL statements:
     \item pgAdmin or psql command-line tool
 \end{itemize}
 
-\screenshotplaceholder{5cm}{Screenshot Placeholder: PostgreSQL server or pgAdmin dashboard}
+\screenshotplaceholder{5cm}{Screenshot Placeholder: PostgreSQL server, pgAdmin dashboard, or psql terminal}
 
-% -------------------------------------------------------------
-% 3. Theory
-% -------------------------------------------------------------
-\section*{3. Theory}
+\subsection*{2.1 Connecting to PostgreSQL}
+The following command opens the psql terminal and connects to PostgreSQL using the \texttt{postgres}
+user.
 
-\subsection*{3.1 Data Definition Language}
-\defbox{DDL}{Data Definition Language is the subset of SQL used to define and manage the structure of a database. DDL commands affect database objects such as databases, schemas, tables, and constraints.}
+\begin{verbatim}
+psql -U postgres
+\end{verbatim}
 
-\noindent Common DDL statements are summarized below:
+\screenshotplaceholder{5cm}{Screenshot Placeholder: Successful login to PostgreSQL}
+
+\subsection*{2.2 Basic psql Navigation Commands}
+Before using navigation commands, it is important to understand the database objects being
+navigated.
+
+\defbox{Database}{A database is an organized collection of related data. In PostgreSQL, a database contains schemas, tables, and other objects used to store and manage information for a particular application or purpose.}
+
+\defbox{Schema}{A schema is a logical container inside a database. It groups related database objects such as tables, views, and functions, and helps organize large databases.}
+
+\defbox{Table}{A table is a database object that stores data in rows and columns. Each table usually represents one entity, such as students, departments, courses, or employees.}
+
+\noindent\textbf{Example:} In a \texttt{university\_lab} database, an \texttt{academics} schema may contain a \texttt{student} table.
+
+After connecting to PostgreSQL, use the following commands to navigate databases, schemas, and
+tables.
 
 \begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.4}
-\begin{tabular}{>{\bfseries}p{3cm} p{9cm}}
+\begin{tabular}{>{\bfseries}p{4cm} p{8cm}}
 \toprule
-Statement & Purpose \\
+Command & Purpose \\
 \midrule
-CREATE & Creates a database object such as a database, schema, or table. \\
-ALTER & Modifies the structure of an existing database object. \\
-DROP & Deletes a database object permanently. \\
-TRUNCATE & Removes all rows from a table without deleting the table itself. \\
+\texttt{\textbackslash l} & Lists all databases. \\
+\texttt{\textbackslash c database\_name} & Connects to a selected database. \\
+\texttt{\textbackslash dt} & Lists all tables in the current database schema. \\
+\texttt{\textbackslash d table\_name} & Shows the structure of a selected table. \\
+\texttt{\textbackslash dn} & Lists available schemas. \\
+\texttt{\textbackslash q} & Exits psql. \\
 \bottomrule
 \end{tabular}
-\caption{Common PostgreSQL DDL statements}
-\label{tab:ddl_statements}
+\caption{Basic psql navigation commands}
+\label{tab:psql_commands}
 \end{table}
 
-\subsection*{3.2 PostgreSQL Data Types}
-Choosing appropriate data types is important because data types control what kind of values can be
-stored in each column.
+\begin{verbatim}
+\l
+\c postgres
+\dt
+\dn
+\q
+\end{verbatim}
+
+\screenshotplaceholder{5cm}{Screenshot Placeholder: Output of basic psql navigation commands}
+
+\subsection*{2.3 Creating and Selecting a Database}
+Create a database for this lab and connect to it.
+
+\begin{verbatim}
+CREATE DATABASE university_lab;
+\end{verbatim}
+
+\begin{verbatim}
+\c university_lab
+\end{verbatim}
+
+\screenshotplaceholder{5cm}{Screenshot Placeholder: Database creation and connection output}
+
+% -------------------------------------------------------------
+% 3. Relational Database Concepts
+% -------------------------------------------------------------
+\section*{3. Relational Database Concepts}
+A relational database stores data in tables. Each table represents an entity, and relationships
+between tables are created using keys.
+
+\subsection*{3.1 Tables, Rows, and Columns}
+\defbox{Table}{A table is a collection of related data arranged in rows and columns. For example, a \texttt{student} table stores student information.}
+
+\defbox{Column}{A column represents a specific attribute of a table, such as \texttt{student\_id}, \texttt{name}, or \texttt{email}.}
+
+\defbox{Row}{A row represents one record in a table. For example, one row in the \texttt{student} table represents one student.}
+
+\screenshotplaceholder{5cm}{Screenshot Placeholder: Example table showing rows and columns}
+
+\subsection*{3.2 Common PostgreSQL Data Types}
+Each column must have a data type. The data type defines what kind of value can be stored in the
+column.
 
 \begin{table}[H]
 \centering
@@ -132,10 +184,12 @@ BOOLEAN & Stores true or false values. \\
 \label{tab:data_types}
 \end{table}
 
-\subsection*{3.3 Constraints}
+\subsection*{3.3 Keys and Constraints}
+\defbox{Key}{A key is a column or group of columns used to identify records or create relationships between tables.}
+
 \defbox{Constraint}{A constraint is a rule applied to a table column or a group of columns to maintain data accuracy and integrity.}
 
-\noindent Common constraints include:
+\noindent Common keys and constraints include:
 \begin{itemize}
     \item \texttt{PRIMARY KEY}: uniquely identifies each row in a table.
     \item \texttt{FOREIGN KEY}: links a column to the primary key of another table.
@@ -146,51 +200,15 @@ BOOLEAN & Stores true or false values. \\
 \end{itemize}
 
 % -------------------------------------------------------------
-% 4. Procedure
+% 4. Creating Tables with DDL Statements
 % -------------------------------------------------------------
-\section*{4. Procedure}
+\section*{4. Creating Tables with DDL Statements}
+\defbox{DDL}{Data Definition Language is the subset of SQL used to define and manage database structures such as tables, schemas, and constraints.}
 
-\subsection*{4.1 Connecting to PostgreSQL}
-Open pgAdmin or the psql command-line tool and connect to the PostgreSQL server using a valid
-username and password.
+The \texttt{CREATE TABLE} statement creates a new table. The statement includes table name, column
+names, data types, and constraints.
 
-\begin{verbatim}
-psql -U postgres
-\end{verbatim}
-
-\screenshotplaceholder{5cm}{Screenshot Placeholder: Successful connection to PostgreSQL}
-
-\subsection*{4.2 Creating a Database}
-Use the \texttt{CREATE DATABASE} statement to create a new database for this lab.
-
-\begin{verbatim}
-CREATE DATABASE university_lab;
-\end{verbatim}
-
-After creating the database, connect to it.
-
-\begin{verbatim}
-\c university_lab
-\end{verbatim}
-
-\screenshotplaceholder{5cm}{Screenshot Placeholder: Database creation and connection output}
-
-\subsection*{4.3 Creating a Schema}
-A schema is a logical container for database objects. It helps organize tables and other objects.
-
-\begin{verbatim}
-CREATE SCHEMA academics;
-\end{verbatim}
-
-Set the search path so PostgreSQL uses this schema by default.
-
-\begin{verbatim}
-SET search_path TO academics;
-\end{verbatim}
-
-\subsection*{4.4 Creating Tables}
-The \texttt{CREATE TABLE} statement defines a new table, its columns, data types, and constraints.
-
+\subsection*{4.1 Creating a Simple Table}
 \begin{verbatim}
 CREATE TABLE department (
     dept_id SERIAL PRIMARY KEY,
@@ -199,6 +217,9 @@ CREATE TABLE department (
 );
 \end{verbatim}
 
+\screenshotplaceholder{5cm}{Screenshot Placeholder: Creating the department table}
+
+\subsection*{4.2 Creating a Table with Different Data Types and Constraints}
 \begin{verbatim}
 CREATE TABLE student (
     student_id SERIAL PRIMARY KEY,
@@ -207,10 +228,14 @@ CREATE TABLE student (
     email VARCHAR(100) UNIQUE,
     date_of_birth DATE,
     admission_year INTEGER CHECK (admission_year >= 2000),
+    is_active BOOLEAN DEFAULT TRUE,
     dept_id INTEGER REFERENCES department(dept_id)
 );
 \end{verbatim}
 
+\screenshotplaceholder{6cm}{Screenshot Placeholder: Creating the student table}
+
+\subsection*{4.3 Creating a Table with a Foreign Key}
 \begin{verbatim}
 CREATE TABLE course (
     course_id SERIAL PRIMARY KEY,
@@ -221,10 +246,9 @@ CREATE TABLE course (
 );
 \end{verbatim}
 
-\screenshotplaceholder{6cm}{Screenshot Placeholder: Table creation statements executed successfully}
-
-\subsection*{4.5 Creating a Table with Composite Primary Key}
-A composite primary key is formed using two or more columns. It is useful for junction tables.
+\subsection*{4.4 Creating a Table with Composite Primary Key}
+A composite primary key is formed using two or more columns. It is useful for junction tables that
+represent many-to-many relationships.
 
 \begin{verbatim}
 CREATE TABLE enrollment (
@@ -236,100 +260,180 @@ CREATE TABLE enrollment (
 );
 \end{verbatim}
 
-\subsection*{4.6 Viewing Table Structure}
-In psql, the \texttt{\textbackslash d} command can be used to view the structure of a table.
+\screenshotplaceholder{6cm}{Screenshot Placeholder: Creating course and enrollment tables}
+
+\subsection*{4.5 Viewing Table Structure}
+After creating tables, inspect their structure using psql.
 
 \begin{verbatim}
+\dt
 \d department
 \d student
 \d course
 \d enrollment
 \end{verbatim}
 
-\screenshotplaceholder{6cm}{Screenshot Placeholder: Table descriptions showing columns and constraints}
+\screenshotplaceholder{6cm}{Screenshot Placeholder: Table list and table descriptions}
 
-\subsection*{4.7 Modifying Tables with ALTER}
-Use \texttt{ALTER TABLE} to modify an existing table structure.
+% -------------------------------------------------------------
+% 5. Modifying Tables with ALTER
+% -------------------------------------------------------------
+\section*{5. Modifying Tables with ALTER}
+The \texttt{ALTER TABLE} statement modifies the structure of an existing table.
 
-\noindent Add a new column:
+\subsection*{5.1 Adding a Column}
 \begin{verbatim}
 ALTER TABLE student
 ADD COLUMN phone VARCHAR(20);
 \end{verbatim}
 
-\noindent Rename a column:
+\subsection*{5.2 Deleting a Column}
 \begin{verbatim}
 ALTER TABLE student
-RENAME COLUMN phone TO contact_number;
+DROP COLUMN phone;
 \end{verbatim}
 
-\noindent Change a column data type:
+\subsection*{5.3 Changing a Column Data Type}
 \begin{verbatim}
+ALTER TABLE student
+ADD COLUMN contact_number VARCHAR(20);
+
 ALTER TABLE student
 ALTER COLUMN contact_number TYPE VARCHAR(30);
 \end{verbatim}
 
-\noindent Add a constraint:
+\subsection*{5.4 Renaming a Column}
+\begin{verbatim}
+ALTER TABLE student
+RENAME COLUMN contact_number TO mobile_number;
+\end{verbatim}
+
+\subsection*{5.5 Adding a Constraint}
 \begin{verbatim}
 ALTER TABLE enrollment
 ADD CONSTRAINT grade_check
 CHECK (grade IN ('A+', 'A', 'B+', 'B', 'C+', 'C', 'D', 'F'));
 \end{verbatim}
 
-\screenshotplaceholder{6cm}{Screenshot Placeholder: ALTER TABLE statements and updated table structure}
+\screenshotplaceholder{6cm}{Screenshot Placeholder: ALTER TABLE commands and updated table structure}
 
-\subsection*{4.8 Renaming and Dropping Database Objects}
-Rename a table using \texttt{ALTER TABLE}.
+\subsection*{5.6 More ALTER Commands for Further Exploration}
+The following commands are useful in real database work. Students should explore them after
+practicing the essential \texttt{ALTER TABLE} commands above and figure out what they do.
 
 \begin{verbatim}
-ALTER TABLE course
-RENAME TO offered_course;
+ALTER TABLE student RENAME TO university_student;
+
+ALTER TABLE university_student
+ALTER COLUMN email SET NOT NULL;
+
+ALTER TABLE university_student
+ALTER COLUMN is_active SET DEFAULT TRUE;
+
+ALTER TABLE university_student
+DROP CONSTRAINT IF EXISTS university_student_email_key;
 \end{verbatim}
 
-Drop a table only when it is no longer needed. The \texttt{IF EXISTS} clause prevents an error if the
-table does not exist.
+% -------------------------------------------------------------
+% 6. DROP and TRUNCATE Commands
+% -------------------------------------------------------------
+\section*{6. DROP and TRUNCATE Commands}
+\subsection*{6.1 DROP TABLE}
+The \texttt{DROP TABLE} command removes a table permanently. Use it carefully because the table
+definition and its data are deleted.
 
 \begin{verbatim}
 DROP TABLE IF EXISTS temporary_table;
 \end{verbatim}
 
-\subsection*{4.9 Truncating a Table}
-The \texttt{TRUNCATE} statement removes all rows from a table while keeping the table structure.
+\subsection*{6.2 TRUNCATE TABLE}
+The \texttt{TRUNCATE} command removes all rows from a table but keeps the table structure.
 
 \begin{verbatim}
 TRUNCATE TABLE enrollment;
 \end{verbatim}
 
-If another table references the table, use \texttt{CASCADE} carefully.
+If another table references the table, \texttt{CASCADE} may be needed. Use it carefully.
 
 \begin{verbatim}
 TRUNCATE TABLE enrollment CASCADE;
 \end{verbatim}
 
-\screenshotplaceholder{5cm}{Screenshot Placeholder: TRUNCATE or DROP command execution}
+\screenshotplaceholder{5cm}{Screenshot Placeholder: DROP or TRUNCATE command execution}
 
 % -------------------------------------------------------------
-% 5. Observations
+% 7. Inserting and Viewing Table Data
 % -------------------------------------------------------------
-\section*{5. Observations}
+\section*{7. Inserting and Viewing Table Data}
+Although \texttt{INSERT} and \texttt{SELECT} are not DDL commands, they are useful for checking whether
+the created table structures work correctly.
+
+\subsection*{7.1 Inserting Records}
+\begin{verbatim}
+INSERT INTO department (dept_name, location)
+VALUES ('Computer Science and Engineering', 'Academic Building 1');
+\end{verbatim}
+
+\begin{verbatim}
+INSERT INTO student
+    (first_name, last_name, email, date_of_birth, admission_year, dept_id)
+VALUES
+    ('Rahim', 'Ahmed', 'rahim.ahmed@example.com', '2002-05-14', 2023, 1);
+\end{verbatim}
+
+\begin{verbatim}
+INSERT INTO course (course_code, course_title, credit, dept_id)
+VALUES ('CSE312', 'Database Management Systems Lab', 1.5, 1);
+\end{verbatim}
+
+\begin{verbatim}
+INSERT INTO enrollment (student_id, course_id, grade)
+VALUES (1, 1, 'A');
+\end{verbatim}
+
+\subsection*{7.2 Viewing Records}
+\begin{verbatim}
+SELECT * FROM department;
+SELECT * FROM student;
+SELECT * FROM course;
+SELECT * FROM enrollment;
+\end{verbatim}
+
+\screenshotplaceholder{6cm}{Screenshot Placeholder: Inserted records displayed using SELECT}
+
+% -------------------------------------------------------------
+% 8. Observations
+% -------------------------------------------------------------
+\section*{8. Observations}
 \begin{itemize}
-    \item A new PostgreSQL database was created and selected successfully.
-    \item A schema was created to organize database objects.
-    \item Tables were created with appropriate data types and constraints.
-    \item Primary key and foreign key constraints were used to maintain entity integrity and referential integrity.
-    \item Existing table structures were modified using \texttt{ALTER TABLE}.
-    \item Rows were removed using \texttt{TRUNCATE} without deleting the table definition.
+    \item PostgreSQL was accessed using pgAdmin or the psql command-line tool.
+    \item Basic psql navigation commands were used to list databases, connect to a database, and inspect tables.
+    \item Relational database concepts such as tables, rows, columns, data types, keys, and constraints were practiced.
+    \item Tables were created using \texttt{CREATE TABLE} with suitable data types and constraints.
+    \item Table structures were modified using essential \texttt{ALTER TABLE} commands.
+    \item \texttt{DROP} and \texttt{TRUNCATE} commands were introduced for removing database objects or table records.
+    \item Sample records were inserted and viewed to verify the created schema.
 \end{itemize}
 
 % -------------------------------------------------------------
-% 6. Lab Task
+% 9. Lab Task
 % -------------------------------------------------------------
-\section*{6. Lab Task}
+\section*{9. Lab Task}
 
-\subsection*{Task A: Library Management Database}
-Create a PostgreSQL database named \texttt{library\_lab}. Then create the following tables using DDL
-statements:
+\subsection*{Task A: Basic PostgreSQL Navigation}
+Complete the following tasks and attach screenshots:
+\begin{enumerate}
+    \item Connect to PostgreSQL using pgAdmin or psql.
+    \item List all available databases.
+    \item Create a database named \texttt{library\_lab}.
+    \item Connect to \texttt{library\_lab}.
+    \item List all tables in the database.
+\end{enumerate}
 
+% \screenshotplaceholder{6cm}{Screenshot Placeholder: Task A navigation commands and outputs}
+
+\subsection*{Task B: Library Management Tables}
+Create the following tables using PostgreSQL DDL statements:
 \begin{enumerate}
     \item \texttt{publisher}: stores publisher information.
     \item \texttt{book}: stores book information and references \texttt{publisher}.
@@ -343,14 +447,26 @@ statements:
     \item Define primary keys for all tables.
     \item Define foreign keys where necessary.
     \item Add at least one \texttt{UNIQUE}, one \texttt{NOT NULL}, one \texttt{CHECK}, and one \texttt{DEFAULT} constraint.
-    \item Use \texttt{ALTER TABLE} to add one new column to any table.
-    \item Capture screenshots of the SQL commands and table structures.
+    \item Show each table structure using psql commands.
 \end{itemize}
 
-\screenshotplaceholder{7cm}{Screenshot Placeholder: Completed Task A DDL statements and output}
+% \screenshotplaceholder{7cm}{Screenshot Placeholder: Task B table creation commands and table structures}
 
-\subsection*{Task B: Hospital Management Database}
-Write PostgreSQL DDL statements for a hospital management database containing the following tables:
+\subsection*{Task C: ALTER, INSERT, and SELECT Practice}
+Using the tables created in Task B:
+\begin{enumerate}
+    \item Add a new column to any table.
+    \item Rename one column.
+    \item Change the data type of one suitable column.
+    \item Delete one unnecessary column.
+    \item Insert at least two records into each table.
+    \item Display all records from each table using \texttt{SELECT}.
+\end{enumerate}
+
+% \screenshotplaceholder{7cm}{Screenshot Placeholder: Task C ALTER, INSERT, and SELECT outputs}
+
+\subsection*{Task D: Hospital Management Database}
+Write PostgreSQL statements for a hospital management database containing the following tables:
 \texttt{department}, \texttt{doctor}, \texttt{patient}, and \texttt{appointment}.
 
 \noindent Requirements:
@@ -359,20 +475,20 @@ Write PostgreSQL DDL statements for a hospital management database containing th
     \item Each appointment must reference one doctor and one patient.
     \item Appointment dates should have a default value of the current date.
     \item Consultation fees must be greater than or equal to zero.
-    \item Add suitable primary key, foreign key, unique, not null, default, and check constraints.
-    \item Include screenshots of the commands and the final table descriptions.
+    \item Use suitable primary key, foreign key, unique, not null, default, and check constraints.
+    \item Insert sample records and display the final tables.
 \end{itemize}
 
-\screenshotplaceholder{7cm}{Screenshot Placeholder: Completed Task B DDL statements and output}
+% \screenshotplaceholder{7cm}{Screenshot Placeholder: Task D DDL statements, inserted records, and outputs}
 
 % -------------------------------------------------------------
-% 7. Conclusion
+% 10. Conclusion
 % -------------------------------------------------------------
-\section*{7. Conclusion}
-This experiment introduced PostgreSQL Data Definition Language statements for creating and managing
-database structures. Students practiced creating databases, schemas, and tables; defining data types
-and constraints; modifying table definitions; and removing or clearing database objects. These DDL
-skills provide the foundation for building relational database schemas before inserting and querying
-data in later experiments.
+\section*{10. Conclusion}
+This experiment introduced PostgreSQL from basic navigation to relational table creation. Students
+learned how to connect to PostgreSQL, inspect databases and tables, define relational structures with
+data types, keys, and constraints, modify tables using \texttt{ALTER TABLE}, remove data or objects
+using \texttt{TRUNCATE} and \texttt{DROP}, and verify table structures by inserting and viewing sample
+records.
 
 \end{document}
