@@ -137,7 +137,96 @@ INPUT C:\Program Files\MiKTeX\fonts\tfm\public\cm\cmmi6.tfm
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\cm\cmsy10.tfm
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\cm\cmsy8.tfm
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\cm\cmsy6.tfm
+INPUT .\pgAdmin.png
+INPUT .\pgAdmin.png
+INPUT .\pgAdmin.png
+INPUT .\pgAdmin.png
+INPUT .\pgAdmin.png
+INPUT .\pgAdmin.png
+INPUT .\pgAdmin.png
 INPUT C:\Users\ACER\AppData\Local\MiKTeX\fonts\map\pdftex\pdftex.map
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\cm\cmti12.tfm
+INPUT .\psql-login.png
+INPUT .\psql-login.png
+INPUT .\psql-login.png
+INPUT .\psql-login.png
+INPUT .\psql-login.png
+INPUT .\psql-login.png
+INPUT .\psql-login.png
+INPUT .\database-connect.png
+INPUT .\database-connect.png
+INPUT .\database-connect.png
+INPUT .\database-connect.png
+INPUT .\database-connect.png
+INPUT .\database-connect.png
+INPUT .\database-connect.png
+INPUT .\insert-values.png
+INPUT .\insert-values.png
+INPUT .\insert-values.png
+INPUT .\insert-values.png
+INPUT .\insert-values.png
+INPUT .\insert-values.png
+INPUT .\insert-values.png
+INPUT .\create-table-department.png
+INPUT .\create-table-department.png
+INPUT .\create-table-department.png
+INPUT .\create-table-department.png
+INPUT .\create-table-department.png
+INPUT .\create-table-department.png
+INPUT .\create-table-department.png
+INPUT .\create-table-student.png
+INPUT .\create-table-student.png
+INPUT .\create-table-student.png
+INPUT .\create-table-student.png
+INPUT .\create-table-student.png
+INPUT .\create-table-student.png
+INPUT .\create-table-student.png
+INPUT .\create-table-course-enrollment.png
+INPUT .\create-table-course-enrollment.png
+INPUT .\create-table-course-enrollment.png
+INPUT .\create-table-course-enrollment.png
+INPUT .\create-table-course-enrollment.png
+INPUT .\create-table-course-enrollment.png
+INPUT .\create-table-course-enrollment.png
+INPUT .\viewing-table-structure.png
+INPUT .\viewing-table-structure.png
+INPUT .\viewing-table-structure.png
+INPUT .\viewing-table-structure.png
+INPUT .\viewing-table-structure.png
+INPUT .\viewing-table-structure.png
+INPUT .\viewing-table-structure.png
+INPUT .\all-alter-commands.png
+INPUT .\all-alter-commands.png
+INPUT .\all-alter-commands.png
+INPUT .\all-alter-commands.png
+INPUT .\all-alter-commands.png
+INPUT .\all-alter-commands.png
+INPUT .\all-alter-commands.png
+INPUT .\student-table-after-alter.png
+INPUT .\student-table-after-alter.png
+INPUT .\student-table-after-alter.png
+INPUT .\student-table-after-alter.png
+INPUT .\student-table-after-alter.png
+INPUT .\student-table-after-alter.png
+INPUT .\student-table-after-alter.png
+INPUT .\enrollment-table-after-alter.png
+INPUT .\enrollment-table-after-alter.png
+INPUT .\enrollment-table-after-alter.png
+INPUT .\enrollment-table-after-alter.png
+INPUT .\enrollment-table-after-alter.png
+INPUT .\enrollment-table-after-alter.png
+INPUT .\enrollment-table-after-alter.png
+INPUT .\drop-truncate-table.png
+INPUT .\drop-truncate-table.png
+INPUT .\drop-truncate-table.png
+INPUT .\drop-truncate-table.png
+INPUT .\drop-truncate-table.png
+INPUT .\drop-truncate-table.png
+INPUT .\drop-truncate-table.png
+INPUT .\insert-values.png
+INPUT .\insert-values.png
+INPUT .\insert-values.png
+INPUT .\insert-values.png
 INPUT lab2_manual.aux
 INPUT .\lab2_manual.out
 INPUT .\lab2_manual.out
@@ -149,5 +238,7 @@ INPUT C:\Program Files\MiKTeX\fonts\type1\public\amsfonts\cm\cmr12.pfb
 INPUT C:\Program Files\MiKTeX\fonts\type1\public\amsfonts\cm\cmr12.pfb
 INPUT C:\Program Files\MiKTeX\fonts\type1\public\amsfonts\cm\cmsy10.pfb
 INPUT C:\Program Files\MiKTeX\fonts\type1\public\amsfonts\cm\cmsy10.pfb
+INPUT C:\Program Files\MiKTeX\fonts\type1\public\amsfonts\cm\cmti12.pfb
+INPUT C:\Program Files\MiKTeX\fonts\type1\public\amsfonts\cm\cmti12.pfb
 INPUT C:\Program Files\MiKTeX\fonts\type1\public\amsfonts\cm\cmtt12.pfb
 INPUT C:\Program Files\MiKTeX\fonts\type1\public\amsfonts\cm\cmtt12.pfb

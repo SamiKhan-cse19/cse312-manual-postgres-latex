@@ -11,6 +11,7 @@
 \usepackage{verbatim}
 \usepackage{upquote}
 
+\graphicspath{{./}{Lab2/}}
 
 \onehalfspacing
 
@@ -30,6 +31,15 @@
   \begin{figure}[H]
       \centering
       \fbox{\parbox[c][#1][c]{0.9\linewidth}{\centering #2}}
+  \end{figure}
+}
+
+% Screenshot figure used throughout the completed manual
+\newcommand{\screenshotfigure}[3][0.92\linewidth]{%
+  \begin{figure}[H]
+      \centering
+      \includegraphics[width=#1]{#2}
+      \caption{#3}
   \end{figure}
 }
 
@@ -74,17 +84,19 @@ will use PostgreSQL to create a small relational database and practice basic dat
     \item pgAdmin or psql command-line tool
 \end{itemize}
 
-% \screenshotplaceholder{5cm}{Screenshot Placeholder: PostgreSQL server, pgAdmin dashboard, or psql terminal}
+\screenshotfigure[0.75\linewidth]{pgAdmin.png}{pgAdmin dashboard for managing PostgreSQL databases}
 
 \subsection*{2.1 Connecting to PostgreSQL}
 The following command opens the psql terminal and connects to PostgreSQL using the \texttt{postgres}
-user.
+user. You have to make sure that the PostgreSQL server is running and the \texttt{postgres} user has the correct password set up.
+
+\textit{Note:} If your terminal says it cannot find the \texttt{psql} command, you may need to add PostgreSQL's \texttt{bin} directory to your system's PATH environment variable.
 
 \begin{verbatim}
 psql -U postgres
 \end{verbatim}
 
-% \screenshotplaceholder{5cm}{Screenshot Placeholder: Successful login to PostgreSQL}
+\screenshotfigure{psql-login.png}{Successful login to PostgreSQL using the psql terminal}
 
 \subsection*{2.2 Basic psql Navigation Commands}
 Before using navigation commands, it is important to understand the database objects being
@@ -127,8 +139,15 @@ Command & Purpose \\
 % \dn
 % \q
 % \end{verbatim}
+% \begin{verbatim}
+% \l
+% \c postgres
+% \dt
+% \dn
+% \q
+% \end{verbatim}
 
-% \screenshotplaceholder{5cm}{Screenshot Placeholder: Output of basic psql navigation commands}
+% \screenshotfigure{psql-navigation.png}{Output of basic psql navigation commands}
 
 \subsection*{2.3 Creating and Selecting a Database}
 Create a database for this lab and connect to it.
@@ -141,7 +160,7 @@ CREATE DATABASE university_lab;
 \c university_lab
 \end{verbatim}
 
-% \screenshotplaceholder{5cm}{Screenshot Placeholder: Database creation and connection output}
+\screenshotfigure{database-connect.png}{Creating and connecting to the \texttt{university\_lab} database}
 
 % -------------------------------------------------------------
 % 3. Relational Database Concepts
@@ -157,7 +176,7 @@ between tables are created using keys.
 
 \defbox{Row}{A row represents one record in a table. For example, one row in the \texttt{student} table represents one student.}
 
-\screenshotplaceholder{5cm}{Screenshot Placeholder: Example table showing rows and columns}
+\screenshotfigure{insert-values.png}{Example table output showing rows and columns}
 
 \subsection*{3.2 Common PostgreSQL Data Types}
 Each column must have a data type. The data type defines what kind of value can be stored in the
@@ -217,7 +236,7 @@ CREATE TABLE department (
 );
 \end{verbatim}
 
-% \screenshotplaceholder{5cm}{Screenshot Placeholder: Creating the department table}
+\screenshotfigure[0.82\linewidth]{create-table-department.png}{Creating the \texttt{department} table}
 
 \subsection*{4.2 Creating a Table with Different Data Types and Constraints}
 \begin{verbatim}
@@ -233,7 +252,7 @@ CREATE TABLE student (
 );
 \end{verbatim}
 
-% \screenshotplaceholder{6cm}{Screenshot Placeholder: Creating the student table}
+\screenshotfigure[0.82\linewidth]{create-table-student.png}{Creating the \texttt{student} table}
 
 \subsection*{4.3 Creating a Table with a Foreign Key}
 \begin{verbatim}
@@ -260,7 +279,7 @@ CREATE TABLE enrollment (
 );
 \end{verbatim}
 
-% \screenshotplaceholder{6cm}{Screenshot Placeholder: Creating course and enrollment tables}
+\screenshotfigure[0.86\linewidth]{create-table-course-enrollment.png}{Creating the \texttt{course} and \texttt{enrollment} tables}
 
 \subsection*{4.5 Viewing Table Structure}
 After creating tables, inspect their structure using psql.
@@ -273,7 +292,7 @@ After creating tables, inspect their structure using psql.
 \d enrollment
 \end{verbatim}
 
-% \screenshotplaceholder{6cm}{Screenshot Placeholder: Table list and table descriptions}
+\screenshotfigure{viewing-table-structure.png}{Viewing table lists and table structures in psql}
 
 % -------------------------------------------------------------
 % 5. Modifying Tables with ALTER
@@ -315,7 +334,9 @@ ADD CONSTRAINT grade_check
 CHECK (grade IN ('A+', 'A', 'B+', 'B', 'C+', 'C', 'D', 'F'));
 \end{verbatim}
 
-% \screenshotplaceholder{6cm}{Screenshot Placeholder: ALTER TABLE commands and updated table structure}
+\screenshotfigure{all-alter-commands.png}{Executing \texttt{ALTER TABLE} commands}
+\screenshotfigure{student-table-after-alter.png}{Updated \texttt{student} table structure after ALTER commands}
+\screenshotfigure{enrollment-table-after-alter.png}{Updated \texttt{enrollment} table structure after adding a constraint}
 
 \subsection*{5.6 More ALTER Commands for Further Exploration}
 The following commands are useful in real database work. Students should explore them after
@@ -359,7 +380,7 @@ If another table references the table, \texttt{CASCADE} may be needed. Use it ca
 TRUNCATE TABLE enrollment CASCADE;
 \end{verbatim}
 
-% \screenshotplaceholder{5cm}{Screenshot Placeholder: DROP or TRUNCATE command execution}
+\screenshotfigure{drop-truncate-table.png}{Executing DROP and TRUNCATE commands}
 
 % -------------------------------------------------------------
 % 7. Inserting and Viewing Table Data
@@ -399,7 +420,7 @@ SELECT * FROM course;
 SELECT * FROM enrollment;
 \end{verbatim}
 
-% \screenshotplaceholder{6cm}{Screenshot Placeholder: Inserted records displayed using SELECT}
+\screenshotfigure{insert-values.png}{Inserted records displayed using \texttt{SELECT}}
 
 % -------------------------------------------------------------
 % 8. Observations
