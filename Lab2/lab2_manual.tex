@@ -74,7 +74,7 @@ will use PostgreSQL to create a small relational database and practice basic dat
     \item pgAdmin or psql command-line tool
 \end{itemize}
 
-\screenshotplaceholder{5cm}{Screenshot Placeholder: PostgreSQL server, pgAdmin dashboard, or psql terminal}
+% \screenshotplaceholder{5cm}{Screenshot Placeholder: PostgreSQL server, pgAdmin dashboard, or psql terminal}
 
 \subsection*{2.1 Connecting to PostgreSQL}
 The following command opens the psql terminal and connects to PostgreSQL using the \texttt{postgres}
@@ -84,7 +84,7 @@ user.
 psql -U postgres
 \end{verbatim}
 
-\screenshotplaceholder{5cm}{Screenshot Placeholder: Successful login to PostgreSQL}
+% \screenshotplaceholder{5cm}{Screenshot Placeholder: Successful login to PostgreSQL}
 
 \subsection*{2.2 Basic psql Navigation Commands}
 Before using navigation commands, it is important to understand the database objects being
@@ -120,15 +120,15 @@ Command & Purpose \\
 \label{tab:psql_commands}
 \end{table}
 
-\begin{verbatim}
-\l
-\c postgres
-\dt
-\dn
-\q
-\end{verbatim}
+% \begin{verbatim}
+% \l
+% \c postgres
+% \dt
+% \dn
+% \q
+% \end{verbatim}
 
-\screenshotplaceholder{5cm}{Screenshot Placeholder: Output of basic psql navigation commands}
+% \screenshotplaceholder{5cm}{Screenshot Placeholder: Output of basic psql navigation commands}
 
 \subsection*{2.3 Creating and Selecting a Database}
 Create a database for this lab and connect to it.
@@ -141,7 +141,7 @@ CREATE DATABASE university_lab;
 \c university_lab
 \end{verbatim}
 
-\screenshotplaceholder{5cm}{Screenshot Placeholder: Database creation and connection output}
+% \screenshotplaceholder{5cm}{Screenshot Placeholder: Database creation and connection output}
 
 % -------------------------------------------------------------
 % 3. Relational Database Concepts
@@ -217,7 +217,7 @@ CREATE TABLE department (
 );
 \end{verbatim}
 
-\screenshotplaceholder{5cm}{Screenshot Placeholder: Creating the department table}
+% \screenshotplaceholder{5cm}{Screenshot Placeholder: Creating the department table}
 
 \subsection*{4.2 Creating a Table with Different Data Types and Constraints}
 \begin{verbatim}
@@ -233,7 +233,7 @@ CREATE TABLE student (
 );
 \end{verbatim}
 
-\screenshotplaceholder{6cm}{Screenshot Placeholder: Creating the student table}
+% \screenshotplaceholder{6cm}{Screenshot Placeholder: Creating the student table}
 
 \subsection*{4.3 Creating a Table with a Foreign Key}
 \begin{verbatim}
@@ -260,7 +260,7 @@ CREATE TABLE enrollment (
 );
 \end{verbatim}
 
-\screenshotplaceholder{6cm}{Screenshot Placeholder: Creating course and enrollment tables}
+% \screenshotplaceholder{6cm}{Screenshot Placeholder: Creating course and enrollment tables}
 
 \subsection*{4.5 Viewing Table Structure}
 After creating tables, inspect their structure using psql.
@@ -273,7 +273,7 @@ After creating tables, inspect their structure using psql.
 \d enrollment
 \end{verbatim}
 
-\screenshotplaceholder{6cm}{Screenshot Placeholder: Table list and table descriptions}
+% \screenshotplaceholder{6cm}{Screenshot Placeholder: Table list and table descriptions}
 
 % -------------------------------------------------------------
 % 5. Modifying Tables with ALTER
@@ -315,7 +315,7 @@ ADD CONSTRAINT grade_check
 CHECK (grade IN ('A+', 'A', 'B+', 'B', 'C+', 'C', 'D', 'F'));
 \end{verbatim}
 
-\screenshotplaceholder{6cm}{Screenshot Placeholder: ALTER TABLE commands and updated table structure}
+% \screenshotplaceholder{6cm}{Screenshot Placeholder: ALTER TABLE commands and updated table structure}
 
 \subsection*{5.6 More ALTER Commands for Further Exploration}
 The following commands are useful in real database work. Students should explore them after
@@ -359,7 +359,7 @@ If another table references the table, \texttt{CASCADE} may be needed. Use it ca
 TRUNCATE TABLE enrollment CASCADE;
 \end{verbatim}
 
-\screenshotplaceholder{5cm}{Screenshot Placeholder: DROP or TRUNCATE command execution}
+% \screenshotplaceholder{5cm}{Screenshot Placeholder: DROP or TRUNCATE command execution}
 
 % -------------------------------------------------------------
 % 7. Inserting and Viewing Table Data
@@ -399,7 +399,7 @@ SELECT * FROM course;
 SELECT * FROM enrollment;
 \end{verbatim}
 
-\screenshotplaceholder{6cm}{Screenshot Placeholder: Inserted records displayed using SELECT}
+% \screenshotplaceholder{6cm}{Screenshot Placeholder: Inserted records displayed using SELECT}
 
 % -------------------------------------------------------------
 % 8. Observations

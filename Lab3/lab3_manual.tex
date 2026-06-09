@@ -1,0 +1,825 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{xcolor}
+\usepackage[hypertexnames=false]{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{longtable}
+\usepackage{verbatim}
+\usepackage{upquote}
+
+\onehalfspacing
+\raggedbottom
+
+\definecolor{boxgray}{rgb}{0.93,0.93,0.93}
+
+% A simple shaded definition box
+\newcommand{\defbox}[2]{%
+  \vspace{0.2cm}
+  \noindent\colorbox{boxgray}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+    \textbf{#1:} #2
+  }}
+  \vspace{0.2cm}
+}
+
+\begin{document}
+
+% -------------------------------------------------------------
+% Header
+% -------------------------------------------------------------
+\begin{center}
+    {\Large \textbf{CSE312: Database Management Systems Lab}}\\[0.3cm]
+    {\large \textbf{Lab 03: PostgreSQL Data Manipulation Language (DML)}}
+\end{center}
+
+\vspace{0.5cm}
+
+% -------------------------------------------------------------
+% 1. Objective
+% -------------------------------------------------------------
+\section*{1. Objective}
+The objectives of this experiment are:
+\begin{itemize}
+    \item To understand the purpose of Data Manipulation Language (DML).
+    \item To insert single and multiple records into PostgreSQL tables.
+    \item To retrieve and filter records for verifying DML operations.
+    \item To update existing records using suitable conditions.
+    \item To delete selected records without affecting unrelated data.
+    \item To use PostgreSQL's \texttt{RETURNING} clause to inspect affected rows.
+    \item To observe how constraints and foreign keys maintain data integrity during DML operations.
+\end{itemize}
+
+% -------------------------------------------------------------
+% 2. Introduction
+% -------------------------------------------------------------
+\section*{2. Introduction to DML}
+\defbox{DML}{Data Manipulation Language is the subset of SQL used to add, modify, and remove records stored in database tables.}
+
+The main PostgreSQL DML commands are:
+\begin{itemize}
+    \item \texttt{INSERT}: adds one or more new rows to a table.
+    \item \texttt{UPDATE}: changes values in existing rows.
+    \item \texttt{DELETE}: removes selected rows from a table.
+\end{itemize}
+
+\texttt{SELECT} is commonly classified as Data Query Language (DQL). It is included in this lab
+because it is essential for inspecting data before and after a DML operation.
+
+\subsection*{2.1 General Safety Rules}
+\begin{itemize}
+    \item Specify column names explicitly in an \texttt{INSERT} statement.
+    \item Check a \texttt{WHERE} condition with \texttt{SELECT} before using it in \texttt{UPDATE} or \texttt{DELETE}.
+    \item Remember that omitting \texttt{WHERE} affects every row in the table.
+    \item Insert parent records before child records when foreign keys are present.
+\end{itemize}
+
+\subsection*{2.2 Commands, Clauses, and Keywords}
+An SQL statement is built from several parts. A \textbf{command} states the main operation, while
+a \textbf{clause} adds information about the target, data, condition, sorting, or output.
+Keywords are reserved SQL words used to form these parts.
+
+\begingroup
+\setstretch{1}
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{>{\bfseries}p{2.7cm} p{4cm} p{5.8cm}}
+\caption{SQL commands, clauses, and keywords used in this experiment}
+\label{tab:sql_parts}\\
+\toprule
+Part & Function & Example \\
+\midrule
+\endfirsthead
+\toprule
+Part & Function & Example \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{INSERT INTO} & Starts an insertion and identifies the table that will receive new rows. &
+\texttt{INSERT INTO student} \\
+
+Column list & Identifies the columns that will receive the supplied values. &
+\texttt{(first\_name, email)} \\
+
+\texttt{VALUES} & Introduces one or more rows of literal values to insert. &
+\texttt{VALUES ('Amina', 'a@example.com')} \\
+
+\texttt{DEFAULT} & Uses the default value defined for a column. &
+\texttt{VALUES ('Amina', DEFAULT)} \\
+
+\texttt{NULL} & Represents an unknown, missing, or inapplicable value. &
+\texttt{VALUES ('Amina', NULL)} \\
+
+\texttt{ON CONFLICT} & Defines how to handle a unique-value conflict during insertion. &
+\texttt{ON CONFLICT (email)} \\
+
+\texttt{DO NOTHING} & Skips a conflicting row instead of producing an error. &
+\texttt{ON CONFLICT (email) DO NOTHING} \\
+
+\texttt{SELECT} & Specifies the columns or expressions to retrieve. &
+\texttt{SELECT student\_id, first\_name} \\
+
+\texttt{FROM} & Identifies the table from which rows are retrieved or deleted. &
+\texttt{FROM student} \\
+
+\texttt{WHERE} & Filters rows using a true-or-false condition. &
+\texttt{WHERE dept\_id = 1} \\
+
+\texttt{ORDER BY} & Sorts query output by one or more columns. &
+\texttt{ORDER BY first\_name} \\
+
+\texttt{ASC} & Requests ascending sorting; this is the default. &
+\texttt{ORDER BY first\_name ASC} \\
+
+\texttt{DESC} & Requests descending sorting. &
+\texttt{ORDER BY admission\_year DESC} \\
+
+\texttt{UPDATE} & Starts a modification and identifies the table to change. &
+\texttt{UPDATE student} \\
+
+\texttt{SET} & Specifies the new value of one or more columns. &
+\texttt{SET is\_active = FALSE} \\
+
+\texttt{DELETE FROM} & Starts deletion and identifies the table from which rows will be removed. &
+\texttt{DELETE FROM enrollment} \\
+
+\texttt{RETURNING} & Displays values from rows affected by \texttt{INSERT}, \texttt{UPDATE}, or \texttt{DELETE}. &
+\texttt{RETURNING student\_id} \\
+
+\end{longtable}
+\endgroup
+
+\subsection*{2.3 Conditions and Operators}
+The \texttt{WHERE} clause uses operators to decide whether each row should be selected, updated, or
+deleted.
+
+\begingroup
+\setstretch{1}
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{>{\bfseries}p{2.7cm} p{4.7cm} p{5.1cm}}
+\caption{Common operators used in WHERE conditions}
+\label{tab:where_operators}\\
+\toprule
+Operator & Function & Example \\
+\midrule
+\endfirsthead
+\toprule
+Operator & Function & Example \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{=} & Equal to & \texttt{dept\_id = 1} \\
+\texttt{<>} or \texttt{!=} & Not equal to & \texttt{grade <> 'F'} \\
+\texttt{>} & Greater than & \texttt{credit > 0} \\
+\texttt{>=} & Greater than or equal to & \texttt{admission\_year >= 2022} \\
+\texttt{<} & Less than & \texttt{admission\_year < 2022} \\
+\texttt{<=} & Less than or equal to & \texttt{credit <= 3.0} \\
+\texttt{AND} & Requires both conditions to be true & \texttt{dept\_id = 1 AND is\_active = TRUE} \\
+\texttt{OR} & Requires at least one condition to be true & \texttt{grade = 'A' OR grade = 'A+'} \\
+\texttt{NOT} & Reverses a condition & \texttt{NOT is\_active} \\
+\texttt{IS NULL} & Tests whether a value is null & \texttt{grade IS NULL} \\
+\texttt{IS NOT NULL} & Tests whether a value is not null & \texttt{email IS NOT NULL} \\
+\end{longtable}
+\endgroup
+
+\subsection*{2.4 How to Read an SQL Statement}
+Consider the following statement:
+
+\begin{verbatim}
+SELECT student_id, first_name
+FROM student
+WHERE dept_id = 1
+ORDER BY first_name;
+\end{verbatim}
+
+\begin{enumerate}
+    \item \texttt{SELECT student\_id, first\_name} states which columns should appear in the result.
+    \item \texttt{FROM student} states where PostgreSQL should read the rows.
+    \item \texttt{WHERE dept\_id = 1} keeps only students belonging to department 1.
+    \item \texttt{ORDER BY first\_name} sorts the remaining rows by first name.
+\end{enumerate}
+
+Although \texttt{SELECT} is written first, PostgreSQL conceptually identifies the source in
+\texttt{FROM}, applies the \texttt{WHERE} filter, forms the selected output, and then performs the
+\texttt{ORDER BY} sorting.
+
+% -------------------------------------------------------------
+% 3. Preparing the Database
+% -------------------------------------------------------------
+\section*{3. Preparing the Database}
+This experiment uses the university database structure introduced in Lab 02. Connect to the
+database first.
+
+\begin{verbatim}
+psql -U postgres
+\c university_lab
+\end{verbatim}
+
+If the Lab 02 tables are not available, create them using the following statements.
+
+\begin{verbatim}
+CREATE TABLE IF NOT EXISTS department (
+    dept_id SERIAL PRIMARY KEY,
+    dept_name VARCHAR(100) NOT NULL UNIQUE,
+    location VARCHAR(100)
+);
+
+CREATE TABLE IF NOT EXISTS student (
+    student_id SERIAL PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    date_of_birth DATE,
+    admission_year INTEGER CHECK (admission_year >= 2000),
+    is_active BOOLEAN DEFAULT TRUE,
+    dept_id INTEGER REFERENCES department(dept_id)
+);
+
+CREATE TABLE IF NOT EXISTS course (
+    course_id SERIAL PRIMARY KEY,
+    course_code VARCHAR(20) NOT NULL UNIQUE,
+    course_title VARCHAR(150) NOT NULL,
+    credit NUMERIC(3, 1) CHECK (credit > 0),
+    dept_id INTEGER NOT NULL REFERENCES department(dept_id)
+);
+
+CREATE TABLE IF NOT EXISTS enrollment (
+    student_id INTEGER REFERENCES student(student_id),
+    course_id INTEGER REFERENCES course(course_id),
+    enrollment_date DATE DEFAULT CURRENT_DATE,
+    grade VARCHAR(2),
+    PRIMARY KEY (student_id, course_id),
+    CONSTRAINT grade_check
+        CHECK (grade IN ('A+', 'A', 'B+', 'B', 'C+', 'C', 'D', 'F'))
+);
+\end{verbatim}
+
+For repeatable practice, remove existing rows and reset the generated identifiers.
+
+\begin{verbatim}
+TRUNCATE TABLE enrollment, student, course, department
+RESTART IDENTITY CASCADE;
+\end{verbatim}
+
+% -------------------------------------------------------------
+% 4. INSERT Statements
+% -------------------------------------------------------------
+\section*{4. Inserting Data with INSERT}
+
+\subsection*{4.1 Inserting a Single Row}
+\defbox{INSERT}{The \texttt{INSERT} command creates one or more new rows in a table.}
+
+\noindent\textbf{General syntax:}
+\begin{verbatim}
+INSERT INTO table_name (column_1, column_2, ...)
+VALUES (value_1, value_2, ...);
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{INSERT INTO}: begins the insertion operation.
+    \item \texttt{table\_name}: identifies the table that will receive the new row.
+    \item \texttt{(column\_1, column\_2, ...)}: lists the target columns in the order in which values will be supplied.
+    \item \texttt{VALUES}: introduces the actual data for the new row.
+    \item \texttt{(value\_1, value\_2, ...)}: supplies one value for each listed column.
+    \item The semicolon terminates the SQL statement.
+\end{itemize}
+
+Text and date values are enclosed in single quotation marks. Numeric values are normally written
+without quotation marks. The number and order of values must match the column list.
+
+\begin{verbatim}
+INSERT INTO department (dept_name, location)
+VALUES ('Computer Science and Engineering', 'Academic Building 1');
+\end{verbatim}
+
+\noindent In this example, \texttt{department} is the target table. The first value is stored in
+\texttt{dept\_name}, and the second value is stored in \texttt{location}. The
+\texttt{dept\_id} column is omitted because PostgreSQL generates its \texttt{SERIAL} value.
+
+\subsection*{4.2 Inserting Multiple Rows}
+Multiple records can be added with one \texttt{INSERT} statement. Each parenthesized group after
+\texttt{VALUES} represents one row, and commas separate the row groups.
+
+\begin{verbatim}
+INSERT INTO department (dept_name, location)
+VALUES
+    ('Electrical and Electronic Engineering', 'Academic Building 2'),
+    ('Business Administration', 'Academic Building 3');
+\end{verbatim}
+
+\noindent This form is shorter and usually more efficient than executing a separate
+\texttt{INSERT} statement for every row. Every row group must contain values compatible with the
+same column list.
+
+\subsection*{4.3 Inserting Rows with Optional and Default Values}
+Columns that have a default value may be omitted. Here, \texttt{is\_active} receives its default
+value of \texttt{TRUE}.
+
+\begin{verbatim}
+INSERT INTO student
+    (first_name, last_name, email, date_of_birth,
+     admission_year, dept_id)
+VALUES
+    ('Amina', 'Rahman', 'amina.rahman@example.com',
+     '2003-02-12', 2022, 1);
+\end{verbatim}
+
+Use \texttt{DEFAULT} explicitly when it makes the intention clearer.
+
+\begin{verbatim}
+INSERT INTO student
+    (first_name, last_name, email, date_of_birth,
+     admission_year, is_active, dept_id)
+VALUES
+    ('Nafis', 'Ahmed', 'nafis.ahmed@example.com',
+     '2002-09-25', 2021, DEFAULT, 1);
+\end{verbatim}
+
+\noindent\textbf{Keyword breakdown:}
+\begin{itemize}
+    \item \texttt{DEFAULT}: tells PostgreSQL to use the default defined for that column.
+    \item An omitted column also receives its default value when one exists.
+    \item If an omitted column has no default, PostgreSQL normally stores \texttt{NULL}, provided the column allows null values.
+    \item \texttt{NULL}: represents a missing, unknown, or not-yet-applicable value; it is not an empty string or zero.
+\end{itemize}
+
+\subsection*{4.4 Inserting Additional Sample Data}
+\begin{verbatim}
+INSERT INTO student
+    (first_name, last_name, email, date_of_birth,
+     admission_year, dept_id)
+VALUES
+    ('Sadia', 'Islam', 'sadia.islam@example.com',
+     '2003-07-08', 2022, 2),
+    ('Tanvir', 'Hasan', 'tanvir.hasan@example.com',
+     '2004-01-19', 2023, 1),
+    ('Maliha', 'Chowdhury', 'maliha.c@example.com',
+     '2002-11-03', 2021, 3);
+
+INSERT INTO course (course_code, course_title, credit, dept_id)
+VALUES
+    ('CSE312', 'Database Management Systems Lab', 1.5, 1),
+    ('CSE311', 'Database Management Systems', 3.0, 1),
+    ('EEE201', 'Electrical Circuits', 3.0, 2),
+    ('BUS101', 'Introduction to Business', 3.0, 3);
+
+INSERT INTO enrollment
+    (student_id, course_id, enrollment_date, grade)
+VALUES
+    (1, 1, '2026-01-15', 'A'),
+    (1, 2, '2026-01-15', 'B+'),
+    (2, 1, '2026-01-16', 'A+'),
+    (3, 3, '2026-01-17', 'B'),
+    (4, 1, DEFAULT, NULL),
+    (5, 4, DEFAULT, 'A');
+\end{verbatim}
+
+\subsection*{4.5 Returning Inserted Values}
+PostgreSQL can immediately return values generated or stored by an \texttt{INSERT}.
+
+\noindent\textbf{General syntax:}
+\begin{verbatim}
+INSERT INTO table_name (columns)
+VALUES (values)
+RETURNING column_1, column_2, ...;
+\end{verbatim}
+
+\begin{verbatim}
+INSERT INTO student
+    (first_name, last_name, email, admission_year, dept_id)
+VALUES
+    ('Rafi', 'Karim', 'rafi.karim@example.com', 2024, 1)
+RETURNING student_id, first_name, last_name, is_active;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{RETURNING}: asks PostgreSQL to output data from the affected row immediately.
+    \item The listed columns determine which values are displayed.
+    \item Generated values such as \texttt{student\_id} can be obtained without a separate \texttt{SELECT}.
+    \item \texttt{RETURNING *} may be used to return every column of the inserted row.
+\end{itemize}
+
+\subsection*{4.6 Handling a Duplicate Value}
+The email column is unique. PostgreSQL's \texttt{ON CONFLICT} clause can safely ignore a duplicate.
+
+\noindent\textbf{General syntax:}
+\begin{verbatim}
+INSERT INTO table_name (columns)
+VALUES (values)
+ON CONFLICT (conflict_column) DO NOTHING;
+\end{verbatim}
+
+\begin{verbatim}
+INSERT INTO student
+    (first_name, last_name, email, admission_year, dept_id)
+VALUES
+    ('Amina', 'Rahman', 'amina.rahman@example.com', 2022, 1)
+ON CONFLICT (email) DO NOTHING;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{ON CONFLICT}: defines what PostgreSQL should do if the insertion violates a suitable unique or exclusion constraint.
+    \item \texttt{(email)}: identifies the unique column used to detect the conflict.
+    \item \texttt{DO NOTHING}: skips the conflicting row instead of raising a duplicate-value error.
+    \item Non-conflicting rows in the same multi-row insertion can still be inserted.
+\end{itemize}
+
+% -------------------------------------------------------------
+% 5. Viewing and Filtering Data
+% -------------------------------------------------------------
+\section*{5. Viewing Data with SELECT}
+
+\subsection*{5.1 Displaying All Rows}
+\defbox{SELECT}{The \texttt{SELECT} command retrieves data from one or more tables without changing the stored records.}
+
+\noindent\textbf{General syntax:}
+\begin{verbatim}
+SELECT column_1, column_2, ...
+FROM table_name
+WHERE condition
+ORDER BY column_name;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{SELECT}: specifies the columns or expressions to display.
+    \item \texttt{*}: selects all columns from the table.
+    \item \texttt{FROM}: identifies the table from which rows are read.
+    \item \texttt{WHERE}: keeps only rows that satisfy a condition; it is optional.
+    \item \texttt{ORDER BY}: sorts the result; it is also optional.
+\end{itemize}
+
+\begin{verbatim}
+SELECT * FROM department;
+SELECT * FROM student;
+SELECT * FROM course;
+SELECT * FROM enrollment;
+\end{verbatim}
+
+\subsection*{5.2 Selecting Particular Columns}
+\begin{verbatim}
+SELECT student_id, first_name, last_name, admission_year
+FROM student;
+\end{verbatim}
+
+\noindent A comma-separated column list limits the output to the required attributes. This improves
+readability and avoids retrieving unnecessary data.
+
+\subsection*{5.3 Filtering and Sorting Rows}
+\begin{verbatim}
+SELECT student_id, first_name, last_name, admission_year
+FROM student
+WHERE dept_id = 1 AND admission_year >= 2022
+ORDER BY admission_year, first_name;
+\end{verbatim}
+
+\noindent\textbf{Clause and operator breakdown:}
+\begin{itemize}
+    \item \texttt{WHERE dept\_id = 1}: selects rows whose department identifier equals 1.
+    \item \texttt{=}: tests equality.
+    \item \texttt{>=}: tests whether the left value is greater than or equal to the right value.
+    \item \texttt{AND}: requires both connected conditions to be true.
+    \item \texttt{ORDER BY admission\_year, first\_name}: sorts first by admission year and then by first name when years are equal.
+    \item Ascending order is the default. \texttt{DESC} may be added after a column for descending order.
+\end{itemize}
+
+\noindent Other common comparison operators are \texttt{<>} or \texttt{!=} for ``not equal,''
+\texttt{<} for ``less than,'' and \texttt{>} for ``greater than.'' The logical operator
+\texttt{OR} requires at least one connected condition to be true, while \texttt{NOT} reverses a
+condition.
+
+\subsection*{5.4 Checking Null Values}
+The \texttt{IS NULL} operator finds enrollments for which a grade has not yet been assigned.
+
+\begin{verbatim}
+SELECT student_id, course_id, enrollment_date
+FROM enrollment
+WHERE grade IS NULL;
+\end{verbatim}
+
+\noindent \texttt{NULL} cannot be tested reliably with \texttt{= NULL}. Use
+\texttt{IS NULL} to find null values and \texttt{IS NOT NULL} to find rows containing a known value.
+
+% -------------------------------------------------------------
+% 6. UPDATE Statements
+% -------------------------------------------------------------
+\section*{6. Modifying Data with UPDATE}
+
+\subsection*{6.1 Updating One Row}
+\defbox{UPDATE}{The \texttt{UPDATE} command changes values in rows that already exist in a table.}
+
+\noindent\textbf{General syntax:}
+\begin{verbatim}
+UPDATE table_name
+SET column_1 = new_value,
+    column_2 = new_value
+WHERE condition
+RETURNING columns;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{UPDATE}: begins the modification operation.
+    \item \texttt{table\_name}: identifies the table whose rows may be changed.
+    \item \texttt{SET}: introduces one or more column assignments.
+    \item \texttt{column = new\_value}: assigns a replacement value to a column.
+    \item Commas separate multiple assignments in the same \texttt{SET} clause.
+    \item \texttt{WHERE}: selects which rows will be updated.
+    \item \texttt{RETURNING}: optionally displays values from the changed rows.
+\end{itemize}
+
+\begin{verbatim}
+UPDATE student
+SET email = 'nafis.a@example.com'
+WHERE student_id = 2;
+\end{verbatim}
+
+\noindent The command searches \texttt{student} for the row whose \texttt{student\_id} is 2 and
+changes only its \texttt{email}. If no row satisfies the condition, PostgreSQL reports
+\texttt{UPDATE 0}, and no data is changed.
+
+\subsection*{6.2 Updating Multiple Columns}
+\begin{verbatim}
+UPDATE department
+SET dept_name = 'Business Studies',
+    location = 'Administration Building'
+WHERE dept_id = 3;
+\end{verbatim}
+
+\noindent Both assignments apply to every row selected by the same \texttt{WHERE} condition. The
+new values must satisfy the columns' data types and constraints.
+
+\subsection*{6.3 Updating Multiple Rows}
+The following statement deactivates students admitted before 2022.
+
+\begin{verbatim}
+UPDATE student
+SET is_active = FALSE
+WHERE admission_year < 2022;
+\end{verbatim}
+
+\noindent A \texttt{WHERE} condition does not have to identify only one row. In this example, every
+student admitted before 2022 is updated.
+
+\subsection*{6.4 Updating a Value Using Its Current Value}
+\begin{verbatim}
+UPDATE course
+SET credit = credit + 0.5
+WHERE course_code = 'CSE312';
+\end{verbatim}
+
+\noindent The expression on the right side is evaluated using the row's current value. Therefore,
+\texttt{credit = credit + 0.5} increases the existing credit rather than replacing it with a fixed
+number.
+
+\subsection*{6.5 Updating and Returning Changed Rows}
+\begin{verbatim}
+UPDATE enrollment
+SET grade = 'B+'
+WHERE student_id = 4 AND course_id = 1
+RETURNING student_id, course_id, grade;
+\end{verbatim}
+
+\noindent The two conditions joined by \texttt{AND} identify one enrollment through its composite
+primary key. After the update, \texttt{RETURNING} displays the identifiers and the new grade.
+
+\subsection*{6.6 The Effect of Omitting WHERE}
+The following statement would change every student record. It is shown only as a warning and
+should not be executed during this experiment.
+
+\begin{verbatim}
+-- Dangerous: affects every row in student.
+UPDATE student SET is_active = FALSE;
+\end{verbatim}
+
+\noindent Without \texttt{WHERE}, the target set is the entire table. Before a broad update, run a
+\texttt{SELECT} with the intended condition and confirm that it returns exactly the rows that
+should be changed.
+
+% -------------------------------------------------------------
+% 7. DELETE Statements
+% -------------------------------------------------------------
+\section*{7. Removing Data with DELETE}
+
+\subsection*{7.1 Deleting One Selected Row}
+\defbox{DELETE}{The \texttt{DELETE} command removes existing rows from a table while leaving the table structure unchanged.}
+
+\noindent\textbf{General syntax:}
+\begin{verbatim}
+DELETE FROM table_name
+WHERE condition
+RETURNING columns;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{DELETE FROM}: begins the deletion and identifies the target table.
+    \item \texttt{WHERE}: selects the rows to remove.
+    \item \texttt{RETURNING}: optionally displays values from the deleted rows.
+    \item Unlike \texttt{SELECT}, a basic \texttt{DELETE} does not place a column list between \texttt{DELETE} and \texttt{FROM}.
+\end{itemize}
+
+First inspect the target row with the same \texttt{WHERE} condition, and then delete it.
+
+\begin{verbatim}
+SELECT *
+FROM enrollment
+WHERE student_id = 5 AND course_id = 4;
+
+DELETE FROM enrollment
+WHERE student_id = 5 AND course_id = 4;
+\end{verbatim}
+
+\noindent The first statement only previews the row. The second statement removes the selected row.
+
+\subsection*{7.2 Deleting Multiple Rows}
+\begin{verbatim}
+DELETE FROM enrollment
+WHERE grade = 'F';
+\end{verbatim}
+
+\noindent Every enrollment whose grade equals \texttt{'F'} is selected. The number of removed rows
+is not fixed; it depends on the current table contents.
+
+\subsection*{7.3 Deleting and Returning Removed Rows}
+\begin{verbatim}
+DELETE FROM student
+WHERE student_id = 6
+RETURNING student_id, first_name, last_name;
+\end{verbatim}
+
+\noindent For \texttt{DELETE}, \texttt{RETURNING} shows the old values from rows that have just
+been removed. This is useful for verification and application logging.
+
+\subsection*{7.4 Foreign Key Restrictions}
+A department cannot normally be deleted while students or courses still reference it.
+
+\begin{verbatim}
+DELETE FROM department
+WHERE dept_id = 1;
+\end{verbatim}
+
+If PostgreSQL reports a foreign key violation, remove or update the related child records first.
+The restriction prevents records from referring to a department that no longer exists.
+
+\subsection*{7.5 DELETE Compared with TRUNCATE}
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{>{\bfseries}p{3cm} p{4.5cm} p{4.5cm}}
+\toprule
+Feature & DELETE & TRUNCATE \\
+\midrule
+SQL category & DML & DDL in many introductory classifications \\
+Row selection & Supports \texttt{WHERE} & Removes all rows \\
+Row output & Supports \texttt{RETURNING} & Does not return removed rows \\
+Identity reset & Sequence is unchanged & Can reset generated sequences \\
+Typical use & Remove selected records & Quickly empty a table \\
+\bottomrule
+\end{tabular}
+\caption{Comparison of DELETE and TRUNCATE}
+\label{tab:delete_truncate}
+\end{table}
+
+\noindent\texttt{TRUNCATE TABLE} is useful when every row must be removed. Its optional clauses used
+earlier in this manual have the following purposes:
+\begin{itemize}
+    \item \texttt{RESTART IDENTITY}: resets sequences owned by the truncated tables, so generated identifiers begin again.
+    \item \texttt{CASCADE}: also truncates tables that have foreign-key dependencies on the named tables.
+    \item \texttt{CASCADE} must be used carefully because it can remove data from additional tables.
+\end{itemize}
+
+% -------------------------------------------------------------
+% 8. Constraint Behavior
+% -------------------------------------------------------------
+\section*{8. Observing Data Integrity}
+Constraints reject DML operations that would store invalid or inconsistent data. Execute the
+following statements one at a time and study the PostgreSQL error messages.
+
+\subsection*{8.1 Unique Constraint Violation}
+\begin{verbatim}
+INSERT INTO department (dept_name, location)
+VALUES ('Computer Science and Engineering', 'Another Building');
+\end{verbatim}
+
+\noindent The \texttt{dept\_name} value already exists. Because the column has a
+\texttt{UNIQUE} constraint, PostgreSQL rejects the complete statement and does not insert a partial
+row.
+
+\subsection*{8.2 Check Constraint Violation}
+\begin{verbatim}
+INSERT INTO course (course_code, course_title, credit, dept_id)
+VALUES ('CSE400', 'Invalid Credit Course', -1.0, 1);
+\end{verbatim}
+
+\noindent The value \texttt{-1.0} does not satisfy \texttt{CHECK (credit > 0)}. The
+\texttt{VALUES} clause is syntactically correct, but the proposed row violates a business rule
+defined in the table.
+
+\subsection*{8.3 Foreign Key Constraint Violation}
+\begin{verbatim}
+INSERT INTO enrollment (student_id, course_id, grade)
+VALUES (999, 1, 'A');
+\end{verbatim}
+
+\noindent The foreign-key value \texttt{student\_id = 999} must match an existing
+\texttt{student.student\_id}. PostgreSQL rejects the enrollment because its parent student does not
+exist.
+
+\subsection*{8.4 Not-Null Constraint Violation}
+\begin{verbatim}
+INSERT INTO student (last_name, admission_year, dept_id)
+VALUES ('No First Name', 2024, 1);
+\end{verbatim}
+
+\noindent The column list omits \texttt{first\_name}. Since that column has no default and is
+declared \texttt{NOT NULL}, PostgreSQL cannot create the row.
+
+% -------------------------------------------------------------
+% 9. Observations
+% -------------------------------------------------------------
+\section*{9. Observations}
+\begin{itemize}
+    \item Single and multiple records were inserted using \texttt{INSERT}.
+    \item Default values and generated identifiers reduced the number of values that had to be supplied.
+    \item \texttt{SELECT} statements were used to inspect and verify table records.
+    \item \texttt{UPDATE} modified only the rows that satisfied its \texttt{WHERE} condition.
+    \item \texttt{DELETE} removed selected records while foreign keys protected related data.
+    \item The \texttt{RETURNING} clause displayed affected rows without requiring a separate query.
+    \item Database constraints rejected duplicate, invalid, incomplete, and unrelated records.
+\end{itemize}
+
+% -------------------------------------------------------------
+% 10. Lab Task
+% -------------------------------------------------------------
+\section*{10. Lab Task}
+
+\subsection*{Task A: Populate the Library Database}
+Use the \texttt{library\_lab} database and the \texttt{publisher}, \texttt{book}, \texttt{member},
+and \texttt{borrow} tables created in Lab 02.
+
+\begin{enumerate}
+    \item Insert at least three publishers.
+    \item Insert at least six books distributed among the publishers.
+    \item Insert at least five library members.
+    \item Insert at least five borrowing records.
+    \item Allow at least one optional column to use its default value.
+    \item Use a multi-row \texttt{INSERT} statement at least once.
+    \item Display all records from each table.
+\end{enumerate}
+
+\subsection*{Task B: Update Library Records}
+Perform the following operations using appropriate \texttt{WHERE} conditions:
+
+\begin{enumerate}
+    \item Change the contact information of one member.
+    \item Update the title or price of one book.
+    \item Mark one borrowed book as returned.
+    \item Update more than one book record using a single statement.
+    \item Use \texttt{RETURNING} in at least one \texttt{UPDATE}.
+    \item Display the affected records after each operation.
+\end{enumerate}
+
+\subsection*{Task C: Delete Practice}
+\begin{enumerate}
+    \item Insert a temporary member and display the generated identifier using \texttt{RETURNING}.
+    \item Display the temporary member using its generated identifier.
+    \item Delete the temporary member using an appropriate \texttt{WHERE} condition.
+    \item Use \texttt{RETURNING} to display the deleted member's identifier and name.
+    \item Verify with \texttt{SELECT} that the record no longer exists.
+    \item Attempt to delete a publisher that is referenced by a book and explain the result.
+\end{enumerate}
+
+\subsection*{Task D: Online Shop DML Problem}
+Assume an online shop database contains the following tables:
+\texttt{customer}, \texttt{product}, \texttt{orders}, and \texttt{order\_item}.
+Write and execute PostgreSQL statements to complete these requirements:
+
+\begin{itemize}
+    \item Insert at least four customers and five products.
+    \item Insert two orders, each containing at least two products.
+    \item Reduce the stock quantity of the ordered products.
+    \item Change the status of one order from \texttt{Pending} to \texttt{Shipped}.
+    \item Delete one product that has never been included in an order.
+    \item Use \texttt{RETURNING} to display the identifier of a newly inserted order.
+    \item Write verification queries that display the final contents of all four tables.
+\end{itemize}
+
+% -------------------------------------------------------------
+% 11. Conclusion
+% -------------------------------------------------------------
+\section*{11. Conclusion}
+This experiment introduced PostgreSQL Data Manipulation Language through practical operations on
+related tables. Students inserted, viewed, updated, and deleted records; used the
+\texttt{RETURNING} clause; and observed constraint and foreign key behavior. These techniques
+provide the foundation for safely maintaining data in relational database applications.
+
+\end{document}
