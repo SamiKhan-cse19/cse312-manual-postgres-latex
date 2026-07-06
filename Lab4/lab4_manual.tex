@@ -1,0 +1,1086 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{xcolor}
+\usepackage[hypertexnames=false]{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{longtable}
+\usepackage{verbatim}
+\usepackage{upquote}
+
+\onehalfspacing
+\raggedbottom
+
+\definecolor{boxgray}{rgb}{0.93,0.93,0.93}
+
+% A simple shaded definition box
+\newcommand{\defbox}[2]{%
+  \vspace{0.2cm}
+  \noindent\colorbox{boxgray}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+    \textbf{#1:} #2
+  }}
+  \vspace{0.2cm}
+}
+
+\begin{document}
+
+% -------------------------------------------------------------
+% Header
+% -------------------------------------------------------------
+\begin{center}
+    {\Large \textbf{CSE312: Database Management Systems Lab}}\\[0.3cm]
+    {\large \textbf{Lab 04: PostgreSQL Data Query Language (DQL)}}
+\end{center}
+
+\vspace{0.5cm}
+
+% -------------------------------------------------------------
+% 1. Objective
+% -------------------------------------------------------------
+\section*{1. Objective}
+The objectives of this experiment are:
+\begin{itemize}
+    \item To understand the purpose of Data Query Language (DQL).
+    \item To retrieve selected columns, expressions, and distinct values with \texttt{SELECT}.
+    \item To filter individual rows with a detailed understanding of the \texttt{WHERE} clause.
+    \item To sort query results and return a controlled number of rows.
+    \item To summarize data using aggregate functions.
+    \item To form groups with \texttt{GROUP BY} and filter groups with \texttt{HAVING}.
+    \item To combine query results using set operators.
+\end{itemize}
+
+% -------------------------------------------------------------
+% 2. Introduction
+% -------------------------------------------------------------
+\section*{2. Introduction to DQL}
+\defbox{DQL}{Data Query Language is the part of SQL used to read, filter, calculate, summarize,
+and present data without directly changing the stored rows.}
+
+The principal DQL command is \texttt{SELECT}. A simple \texttt{SELECT} reads one table, while an
+advanced \texttt{SELECT} may create groups, calculate aggregate values, combine result sets, or
+use the result of another query.
+
+\subsection*{2.1 General SELECT Syntax}
+\begin{verbatim}
+SELECT [DISTINCT] select_list
+FROM source
+[WHERE row_condition]
+[GROUP BY grouping_columns]
+[HAVING group_condition]
+[ORDER BY sort_expression [ASC | DESC]]
+[LIMIT row_count]
+[OFFSET rows_to_skip];
+\end{verbatim}
+
+\noindent Square brackets in the syntax mean that the enclosed part is optional. They should not
+be typed in an actual query.
+
+\noindent\textbf{Complete clause breakdown:}
+\begin{itemize}
+    \item \texttt{SELECT}: starts the query and specifies the values to display.
+    \item \texttt{DISTINCT}: optionally removes duplicate output rows.
+    \item \texttt{select\_list}: contains columns, expressions, functions, or subqueries to return.
+    \item \texttt{FROM}: identifies the table, view, or subquery that supplies rows.
+    \item \texttt{WHERE}: filters individual source rows before grouping.
+    \item \texttt{GROUP BY}: collects rows that have equal grouping values.
+    \item \texttt{HAVING}: filters complete groups after aggregate values are calculated.
+    \item \texttt{ORDER BY}: sorts the final result.
+    \item \texttt{ASC}: requests ascending order; it is the default.
+    \item \texttt{DESC}: requests descending order.
+    \item \texttt{LIMIT}: restricts the maximum number of rows returned.
+    \item \texttt{OFFSET}: skips a specified number of rows before returning results.
+    \item The semicolon terminates the SQL statement.
+\end{itemize}
+
+\subsection*{2.2 Query Clauses at a Glance}
+\begingroup
+\setstretch{1}
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{>{\bfseries}p{2.5cm} p{4.2cm} p{5.8cm}}
+\caption{Important DQL clauses and keywords}
+\label{tab:dql_clauses}\\
+\toprule
+Part & Function & Example \\
+\midrule
+\endfirsthead
+\toprule
+Part & Function & Example \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{SELECT} & Chooses the output columns or expressions. &
+\texttt{SELECT first\_name, admission\_year} \\
+
+\texttt{DISTINCT} & Removes duplicate rows from the selected result. &
+\texttt{SELECT DISTINCT dept\_id} \\
+
+\texttt{AS} & Assigns a readable alias to a column or source. &
+\texttt{COUNT(*) AS total} \\
+
+\texttt{FROM} & Identifies the source of the rows. &
+\texttt{FROM student} \\
+
+\texttt{WHERE} & Filters individual rows. &
+\texttt{WHERE admission\_year >= 2022} \\
+
+\texttt{GROUP BY} & Forms one group for each distinct grouping value. &
+\texttt{GROUP BY dept\_id} \\
+
+\texttt{HAVING} & Filters groups, usually using an aggregate. &
+\texttt{HAVING COUNT(*) >= 2} \\
+
+\texttt{ORDER BY} & Sorts the result. &
+\texttt{ORDER BY admission\_year DESC} \\
+
+\texttt{LIMIT} & Sets the maximum number of returned rows. &
+\texttt{LIMIT 5} \\
+
+\texttt{OFFSET} & Skips rows in the sorted result. &
+\texttt{OFFSET 5} \\
+
+\texttt{UNION} & Combines results and removes duplicates. &
+\texttt{query\_1 UNION query\_2} \\
+
+\texttt{UNION ALL} & Combines results and preserves duplicates. &
+\texttt{query\_1 UNION ALL query\_2} \\
+
+\texttt{INTERSECT} & Returns rows present in both results. &
+\texttt{query\_1 INTERSECT query\_2} \\
+
+\texttt{EXCEPT} & Returns rows from the first result that are absent from the second. &
+\texttt{query\_1 EXCEPT query\_2} \\
+\end{longtable}
+\endgroup
+
+\subsection*{2.3 Written Order and Logical Processing Order}
+SQL is written in a human-readable order, but its clauses are conceptually processed in a
+different order.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{>{\bfseries}p{1.5cm} p{3.2cm} p{7.7cm}}
+\toprule
+Step & Clause & Conceptual operation \\
+\midrule
+1 & \texttt{FROM} & Build the source row set. \\
+2 & \texttt{WHERE} & Keep source rows whose row condition is true. \\
+3 & \texttt{GROUP BY} & Divide the remaining rows into groups. \\
+4 & \texttt{HAVING} & Keep groups whose group condition is true. \\
+5 & \texttt{SELECT} & Calculate and produce the requested output values. \\
+6 & \texttt{DISTINCT} & Remove duplicate output rows when requested. \\
+7 & \texttt{ORDER BY} & Sort the output rows. \\
+8 & \texttt{OFFSET} & Skip rows from the beginning of the sorted result. \\
+9 & \texttt{LIMIT} & Return no more than the requested number of rows. \\
+\bottomrule
+\end{tabular}
+\caption{Conceptual processing order of a SELECT query}
+\label{tab:logical_order}
+\end{table}
+
+\subsection*{2.4 General Query Safety and Readability Rules}
+\begin{itemize}
+    \item List only the columns that are required instead of using \texttt{*} in final reports.
+    \item Qualify a column with a table alias when more than one source contains that column name.
+    \item Use parentheses to make mixed \texttt{AND} and \texttt{OR} conditions unambiguous.
+    \item Use \texttt{IS NULL} or \texttt{IS NOT NULL} to test null values.
+    \item Use \texttt{ORDER BY} with \texttt{LIMIT} when the identity of the selected rows matters.
+    \item Give every subquery in the \texttt{FROM} clause an alias.
+    \item Test an inner query separately before placing it inside a larger query.
+\end{itemize}
+
+% -------------------------------------------------------------
+% 3. Preparing the Database
+% -------------------------------------------------------------
+\section*{3. Preparing the Database}
+This experiment uses the \texttt{university\_lab} database and the four related tables introduced
+in Labs 02 and 03.
+
+\begin{verbatim}
+psql -U postgres
+\c university_lab
+\end{verbatim}
+
+If the tables are not available, create them with the following statements.
+
+\begin{verbatim}
+CREATE TABLE IF NOT EXISTS department (
+    dept_id SERIAL PRIMARY KEY,
+    dept_name VARCHAR(100) NOT NULL UNIQUE,
+    location VARCHAR(100)
+);
+
+CREATE TABLE IF NOT EXISTS student (
+    student_id SERIAL PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    date_of_birth DATE,
+    admission_year INTEGER CHECK (admission_year >= 2000),
+    is_active BOOLEAN DEFAULT TRUE,
+    dept_id INTEGER REFERENCES department(dept_id)
+);
+
+CREATE TABLE IF NOT EXISTS course (
+    course_id SERIAL PRIMARY KEY,
+    course_code VARCHAR(20) NOT NULL UNIQUE,
+    course_title VARCHAR(150) NOT NULL,
+    credit NUMERIC(3, 1) CHECK (credit > 0),
+    dept_id INTEGER NOT NULL REFERENCES department(dept_id)
+);
+
+CREATE TABLE IF NOT EXISTS enrollment (
+    student_id INTEGER REFERENCES student(student_id),
+    course_id INTEGER REFERENCES course(course_id),
+    enrollment_date DATE DEFAULT CURRENT_DATE,
+    grade VARCHAR(2),
+    PRIMARY KEY (student_id, course_id),
+    CONSTRAINT grade_check
+        CHECK (grade IN ('A+', 'A', 'B+', 'B', 'C+', 'C', 'D', 'F'))
+);
+\end{verbatim}
+
+\subsection*{3.1 Loading Repeatable Sample Data}
+The following data gives the queries in this manual a predictable starting point. It deliberately
+includes repeated values, a student without a department, inactive students, and unassigned
+grades.
+
+\begin{verbatim}
+TRUNCATE TABLE enrollment, student, course, department
+RESTART IDENTITY CASCADE;
+
+INSERT INTO department (dept_name, location)
+VALUES
+    ('Computer Science and Engineering', 'Academic Building 1'),
+    ('Electrical and Electronic Engineering', 'Academic Building 2'),
+    ('Business Administration', 'Academic Building 3'),
+    ('Mathematics', 'Academic Building 4');
+
+INSERT INTO student
+    (first_name, last_name, email, date_of_birth,
+     admission_year, is_active, dept_id)
+VALUES
+    ('Amina', 'Rahman', 'amina.rahman@example.com',
+     '2003-02-12', 2022, TRUE, 1),
+    ('Nafis', 'Ahmed', 'nafis.ahmed@example.com',
+     '2002-09-25', 2021, TRUE, 1),
+    ('Sadia', 'Islam', 'sadia.islam@example.com',
+     '2003-07-08', 2022, TRUE, 2),
+    ('Tanvir', 'Hasan', 'tanvir.hasan@example.com',
+     '2004-01-19', 2023, TRUE, 1),
+    ('Maliha', 'Chowdhury', 'maliha.c@example.com',
+     '2002-11-03', 2021, TRUE, 3),
+    ('Rafi', 'Karim', 'rafi.karim@example.com',
+     '2005-04-15', 2024, TRUE, 1),
+    ('Nusrat', 'Jahan', 'nusrat.jahan@example.com',
+     '2003-12-21', 2023, FALSE, 2),
+    ('Imran', 'Hossain', 'imran.h@example.com',
+     '2003-05-10', 2022, TRUE, 3),
+    ('Farhan', 'Ali', 'farhan.ali@example.com',
+     '2001-08-30', 2020, FALSE, 1),
+    ('Tania', 'Sultana', 'tania.s@example.com',
+     '2005-06-18', 2024, TRUE, NULL);
+
+INSERT INTO course (course_code, course_title, credit, dept_id)
+VALUES
+    ('CSE312', 'Database Management Systems Lab', 1.5, 1),
+    ('CSE311', 'Database Management Systems', 3.0, 1),
+    ('CSE220', 'Data Structures', 3.0, 1),
+    ('EEE201', 'Electrical Circuits', 3.0, 2),
+    ('EEE202', 'Electronic Devices', 3.0, 2),
+    ('BUS101', 'Introduction to Business', 3.0, 3),
+    ('BUS201', 'Principles of Marketing', 3.0, 3),
+    ('MAT101', 'Discrete Mathematics', 3.0, 4);
+
+INSERT INTO enrollment
+    (student_id, course_id, enrollment_date, grade)
+VALUES
+    (1, 1, '2026-01-15', 'A'),
+    (1, 2, '2026-01-15', 'B+'),
+    (2, 1, '2026-01-16', 'A+'),
+    (2, 3, '2026-01-16', 'A'),
+    (3, 4, '2026-01-17', 'B'),
+    (3, 5, '2026-01-17', 'B+'),
+    (4, 1, '2026-01-18', NULL),
+    (4, 2, '2026-01-18', 'A'),
+    (5, 6, '2026-01-19', 'A'),
+    (5, 7, '2026-01-19', 'B'),
+    (6, 1, '2026-01-20', 'B+'),
+    (6, 3, '2026-01-20', 'A+'),
+    (7, 4, '2026-01-21', 'C+'),
+    (7, 5, '2026-01-21', NULL),
+    (8, 6, '2026-01-22', 'B+'),
+    (8, 7, '2026-01-22', 'A'),
+    (9, 2, '2026-01-23', 'C'),
+    (9, 8, '2026-01-23', 'B'),
+    (10, 8, '2026-01-24', 'A');
+\end{verbatim}
+
+% -------------------------------------------------------------
+% 4. Basic SELECT
+% -------------------------------------------------------------
+\section*{4. Basic Data Retrieval with SELECT}
+
+\subsection*{4.1 Selecting All Columns}
+\defbox{SELECT}{The \texttt{SELECT} command retrieves rows and calculates the values that will
+appear in a query result.}
+
+\noindent\textbf{General syntax:}
+\begin{verbatim}
+SELECT *
+FROM table_name;
+\end{verbatim}
+
+\begin{verbatim}
+SELECT *
+FROM student;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{SELECT}: begins the retrieval operation.
+    \item \texttt{*}: requests every column from the source.
+    \item \texttt{FROM}: introduces the data source.
+    \item \texttt{student}: is the table that supplies the rows.
+    \item The semicolon ends the statement.
+\end{itemize}
+
+\noindent Using \texttt{*} is convenient for exploration. An explicit column list is usually
+clearer in reports and application code because it prevents unexpected output changes when the
+table structure changes.
+
+\subsection*{4.2 Selecting Particular Columns and Assigning Aliases}
+\begin{verbatim}
+SELECT
+    student_id AS id,
+    first_name AS given_name,
+    last_name AS family_name
+FROM student;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item The comma-separated expressions after \texttt{SELECT} form the output column list.
+    \item \texttt{student\_id}, \texttt{first\_name}, and \texttt{last\_name} are source columns.
+    \item \texttt{AS}: assigns an output alias without renaming the stored table column.
+    \item \texttt{id}, \texttt{given\_name}, and \texttt{family\_name} are headings in the result.
+    \item \texttt{FROM student}: reads rows from the \texttt{student} table.
+\end{itemize}
+
+\subsection*{4.3 Selecting Expressions}
+\begin{verbatim}
+SELECT
+    student_id,
+    first_name || ' ' || last_name AS full_name,
+    2026 - admission_year AS years_since_admission
+FROM student;
+\end{verbatim}
+
+\noindent\textbf{Expression breakdown:}
+\begin{itemize}
+    \item \texttt{||}: concatenates text values in PostgreSQL.
+    \item \texttt{' '}: supplies one space between the first and last names.
+    \item \texttt{AS full\_name}: labels the calculated text expression.
+    \item \texttt{2026 - admission\_year}: calculates a numeric value for each row.
+    \item Expressions affect only the query output; they do not update stored data.
+\end{itemize}
+
+\subsection*{4.4 Removing Duplicate Results with DISTINCT}
+\noindent\textbf{General syntax:}
+\begin{verbatim}
+SELECT DISTINCT column_list
+FROM table_name;
+\end{verbatim}
+
+\begin{verbatim}
+SELECT DISTINCT admission_year
+FROM student
+ORDER BY admission_year;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{DISTINCT}: removes duplicate combinations from the complete selected column list.
+    \item \texttt{admission\_year}: is the value whose distinct occurrences are displayed.
+    \item \texttt{ORDER BY admission\_year}: sorts the unique years in ascending order.
+    \item If several columns follow \texttt{DISTINCT}, PostgreSQL compares the complete row of
+    selected values, not each column independently.
+\end{itemize}
+
+% -------------------------------------------------------------
+% 5. WHERE
+% -------------------------------------------------------------
+\section*{5. Filtering Rows with the WHERE Clause}
+\defbox{WHERE}{The \texttt{WHERE} clause evaluates a true-or-false condition for every source row
+and keeps only rows for which the condition is true.}
+
+\subsection*{5.1 Basic Comparison Conditions}
+\noindent\textbf{General syntax:}
+\begin{verbatim}
+SELECT column_list
+FROM table_name
+WHERE condition;
+\end{verbatim}
+
+\begin{verbatim}
+SELECT student_id, first_name, last_name, admission_year
+FROM student
+WHERE admission_year >= 2022;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{SELECT}: chooses the columns to display.
+    \item \texttt{FROM student}: identifies all student rows as the initial source.
+    \item \texttt{WHERE}: starts the row-filtering condition.
+    \item \texttt{admission\_year >= 2022}: is true for students admitted in 2022 or later.
+    \item Rows for which the condition is false or unknown are excluded.
+\end{itemize}
+
+\begingroup
+\setstretch{1}
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{>{\bfseries}p{2.5cm} p{4.2cm} p{5.8cm}}
+\caption{Common operators used in WHERE conditions}
+\label{tab:where_operators}\\
+\toprule
+Operator & Meaning & Example \\
+\midrule
+\endfirsthead
+\toprule
+Operator & Meaning & Example \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{=} & Equal to & \texttt{dept\_id = 1} \\
+\texttt{<>} or \texttt{!=} & Not equal to & \texttt{admission\_year <> 2024} \\
+\texttt{>} & Greater than & \texttt{credit > 1.5} \\
+\texttt{>=} & Greater than or equal to & \texttt{admission\_year >= 2022} \\
+\texttt{<} & Less than & \texttt{admission\_year < 2022} \\
+\texttt{<=} & Less than or equal to & \texttt{credit <= 3.0} \\
+\texttt{AND} & Both connected conditions must be true & \texttt{dept\_id = 1 AND is\_active} \\
+\texttt{OR} & At least one connected condition must be true & \texttt{dept\_id = 1 OR dept\_id = 2} \\
+\texttt{NOT} & Reverses a condition & \texttt{NOT is\_active} \\
+\texttt{BETWEEN} & Tests an inclusive range & \texttt{admission\_year BETWEEN 2021 AND 2023} \\
+\texttt{IN} & Tests membership in a value list or query result & \texttt{dept\_id IN (1, 2)} \\
+\texttt{LIKE} & Matches a case-sensitive text pattern & \texttt{first\_name LIKE 'A\%'} \\
+\texttt{ILIKE} & Matches a case-insensitive text pattern & \texttt{email ILIKE '\%@example.com'} \\
+\texttt{IS NULL} & Tests for a null value & \texttt{grade IS NULL} \\
+\texttt{IS NOT NULL} & Tests for a non-null value & \texttt{dept\_id IS NOT NULL} \\
+\end{longtable}
+\endgroup
+
+\subsection*{5.2 Combining Conditions with AND, OR, and NOT}
+\begin{verbatim}
+SELECT student_id, first_name, admission_year, dept_id
+FROM student
+WHERE dept_id = 1
+  AND (admission_year >= 2022 OR is_active = FALSE);
+\end{verbatim}
+
+\noindent\textbf{Condition breakdown:}
+\begin{itemize}
+    \item \texttt{dept\_id = 1}: requires membership in department 1.
+    \item The parenthesized expression accepts either a recent admission year or an inactive
+    status.
+    \item \texttt{AND}: requires the department condition and the parenthesized condition.
+    \item \texttt{OR}: requires at least one condition inside the parentheses.
+    \item \texttt{AND} has higher precedence than \texttt{OR}. Parentheses make the intended order
+    explicit and reduce mistakes.
+\end{itemize}
+
+The following query demonstrates \texttt{NOT}.
+
+\begin{verbatim}
+SELECT student_id, first_name, is_active
+FROM student
+WHERE NOT is_active;
+\end{verbatim}
+
+\noindent Because \texttt{is\_active} is a Boolean column, \texttt{NOT is\_active} selects rows
+whose value is \texttt{FALSE}.
+
+\subsection*{5.3 Filtering a Range with BETWEEN}
+\begin{verbatim}
+SELECT student_id, first_name, admission_year
+FROM student
+WHERE admission_year BETWEEN 2021 AND 2023;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{BETWEEN 2021 AND 2023}: includes both boundary values.
+    \item The condition is equivalent to
+    \texttt{admission\_year >= 2021 AND admission\_year <= 2023}.
+    \item \texttt{NOT BETWEEN} may be used to select values outside the inclusive range.
+\end{itemize}
+
+\subsection*{5.4 Testing Membership with IN}
+\begin{verbatim}
+SELECT course_code, course_title, dept_id
+FROM course
+WHERE dept_id IN (1, 3);
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{IN}: compares one expression with every value in a list.
+    \item \texttt{(1, 3)}: is the list of accepted department identifiers.
+    \item The condition is equivalent to \texttt{dept\_id = 1 OR dept\_id = 3}.
+    \item \texttt{NOT IN}: requests values that are not members of the list, but null values require
+    special care.
+\end{itemize}
+
+\subsection*{5.5 Matching Text with LIKE and ILIKE}
+\begin{verbatim}
+SELECT student_id, first_name, email
+FROM student
+WHERE first_name ILIKE 'a%';
+\end{verbatim}
+
+\noindent\textbf{Pattern breakdown:}
+\begin{itemize}
+    \item \texttt{ILIKE}: performs case-insensitive pattern matching in PostgreSQL.
+    \item \texttt{'a\%'}: matches text that begins with the letter \texttt{a}.
+    \item The percent symbol \texttt{\%} matches zero or more characters.
+    \item The underscore \texttt{\_} pattern symbol matches exactly one character.
+    \item \texttt{LIKE} performs case-sensitive matching under common PostgreSQL collations.
+\end{itemize}
+
+\subsection*{5.6 Testing NULL Values}
+\begin{verbatim}
+SELECT student_id, first_name, dept_id
+FROM student
+WHERE dept_id IS NULL;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{NULL}: represents missing, unknown, or inapplicable information.
+    \item \texttt{IS NULL}: tests whether the value is null.
+    \item \texttt{IS NOT NULL}: tests whether a known value exists.
+    \item \texttt{dept\_id = NULL} is not a valid replacement because ordinary comparison with
+    null produces an unknown result.
+\end{itemize}
+
+\noindent SQL expresses what condition the rows must satisfy. PostgreSQL decides how to locate and
+process those rows efficiently.
+
+% -------------------------------------------------------------
+% 6. ORDER BY and LIMIT
+% -------------------------------------------------------------
+\section*{6. Sorting and Limiting Query Results}
+
+\subsection*{6.1 Sorting with ORDER BY}
+\noindent\textbf{General syntax:}
+\begin{verbatim}
+SELECT column_list
+FROM table_name
+ORDER BY sort_expression [ASC | DESC], ...;
+\end{verbatim}
+
+\begin{verbatim}
+SELECT student_id, first_name, last_name, admission_year
+FROM student
+ORDER BY admission_year DESC, first_name ASC;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{ORDER BY}: sorts the final rows.
+    \item \texttt{admission\_year DESC}: places later admission years before earlier years.
+    \item \texttt{first\_name ASC}: breaks ties by first name in ascending order.
+    \item \texttt{ASC}: is optional because ascending order is the default.
+    \item Without \texttt{ORDER BY}, PostgreSQL does not guarantee a particular row order.
+\end{itemize}
+
+\subsection*{6.2 Returning a Fixed Number of Rows with LIMIT}
+\defbox{LIMIT}{The \texttt{LIMIT} clause sets the maximum number of rows that a query may return.}
+
+\noindent\textbf{General syntax:}
+\begin{verbatim}
+SELECT column_list
+FROM table_name
+ORDER BY sort_expression
+LIMIT row_count;
+\end{verbatim}
+
+\begin{verbatim}
+SELECT student_id, first_name, admission_year
+FROM student
+ORDER BY admission_year DESC, student_id
+LIMIT 3;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{ORDER BY admission\_year DESC}: places the newest admission years first.
+    \item \texttt{student\_id}: provides a stable tie-breaker for students with the same year.
+    \item \texttt{LIMIT 3}: returns no more than the first three rows of the sorted result.
+    \item \texttt{LIMIT} does not mean ``top'' by itself; the meaning of ``first'' is defined by
+    \texttt{ORDER BY}.
+\end{itemize}
+
+\subsection*{6.3 Skipping Rows with OFFSET}
+\begin{verbatim}
+SELECT student_id, first_name, admission_year
+FROM student
+ORDER BY student_id
+LIMIT 3 OFFSET 3;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{ORDER BY student\_id}: establishes a repeatable order.
+    \item \texttt{OFFSET 3}: skips the first three sorted rows.
+    \item \texttt{LIMIT 3}: returns at most the next three rows.
+    \item This pattern can implement simple page-based output.
+    \item Large offsets can become inefficient because PostgreSQL still has to identify and skip
+    the earlier rows.
+\end{itemize}
+
+% -------------------------------------------------------------
+% 7. Aggregate Functions
+% -------------------------------------------------------------
+\section*{7. Summarizing Data with Aggregate Functions}
+\defbox{Aggregate Function}{An aggregate function receives values from several rows and returns
+one summary value for the complete set or for each group.}
+
+\subsection*{7.1 Common Aggregate Functions}
+\begingroup
+\setstretch{1}
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{>{\bfseries}p{2.9cm} p{4.3cm} p{5.3cm}}
+\caption{Common aggregate functions}
+\label{tab:aggregate_functions}\\
+\toprule
+Function & Purpose & Example \\
+\midrule
+\endfirsthead
+\toprule
+Function & Purpose & Example \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{COUNT(*)} & Counts rows, including rows containing null values. &
+\texttt{COUNT(*) AS student\_count} \\
+\texttt{COUNT(column)} & Counts non-null values in one column. &
+\texttt{COUNT(grade) AS graded\_count} \\
+\texttt{COUNT(DISTINCT column)} & Counts distinct non-null values. &
+\texttt{COUNT(DISTINCT dept\_id)} \\
+\texttt{SUM(column)} & Adds numeric values. &
+\texttt{SUM(credit)} \\
+\texttt{AVG(column)} & Calculates the arithmetic mean of non-null numeric values. &
+\texttt{AVG(credit)} \\
+\texttt{MIN(column)} & Returns the minimum non-null value. &
+\texttt{MIN(admission\_year)} \\
+\texttt{MAX(column)} & Returns the maximum non-null value. &
+\texttt{MAX(admission\_year)} \\
+\end{longtable}
+\endgroup
+
+\subsection*{7.2 Aggregating the Complete Table}
+\begin{verbatim}
+SELECT
+    COUNT(*) AS total_students,
+    COUNT(dept_id) AS students_with_department,
+    MIN(admission_year) AS earliest_year,
+    MAX(admission_year) AS latest_year
+FROM student;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item No \texttt{GROUP BY} appears, so the complete filtered table is treated as one group.
+    \item \texttt{COUNT(*)}: counts every student row.
+    \item \texttt{COUNT(dept\_id)}: ignores rows whose department identifier is null.
+    \item \texttt{MIN} and \texttt{MAX}: find the smallest and largest admission years.
+    \item Each \texttt{AS} alias gives a descriptive heading to a calculated result.
+\end{itemize}
+
+\subsection*{7.3 Filtering Before Aggregation}
+\begin{verbatim}
+SELECT COUNT(*) AS active_cse_students
+FROM student
+WHERE dept_id = 1 AND is_active = TRUE;
+\end{verbatim}
+
+\noindent The \texttt{WHERE} clause first keeps active department 1 students. \texttt{COUNT(*)}
+then counts only those remaining rows.
+
+% -------------------------------------------------------------
+% 8. GROUP BY and HAVING
+% -------------------------------------------------------------
+\section*{8. Grouping Rows with GROUP BY and HAVING}
+
+\subsection*{8.1 Creating Groups with GROUP BY}
+\defbox{GROUP BY}{The \texttt{GROUP BY} clause collects rows with equal grouping values so that
+aggregate functions can calculate one result per group.}
+
+\noindent\textbf{General syntax:}
+\begin{verbatim}
+SELECT grouping_column, aggregate_function(...)
+FROM table_name
+[WHERE row_condition]
+GROUP BY grouping_column
+[ORDER BY sort_expression];
+\end{verbatim}
+
+\begin{verbatim}
+SELECT
+    dept_id,
+    COUNT(*) AS student_count,
+    MIN(admission_year) AS earliest_admission
+FROM student
+GROUP BY dept_id
+ORDER BY dept_id;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{FROM student}: supplies the source rows.
+    \item \texttt{GROUP BY dept\_id}: creates one group for each distinct department identifier,
+    including a separate null group.
+    \item \texttt{dept\_id}: may appear in \texttt{SELECT} because it is a grouping column.
+    \item \texttt{COUNT(*)}: counts rows inside each department group.
+    \item \texttt{MIN(admission\_year)}: calculates one earliest year for each group.
+    \item \texttt{ORDER BY dept\_id}: sorts the group result.
+\end{itemize}
+
+\noindent In a grouped query, every selected expression should normally be either:
+\begin{itemize}
+    \item included in the \texttt{GROUP BY} clause, or
+    \item calculated by an aggregate function.
+\end{itemize}
+
+\subsection*{8.2 Grouping by More Than One Column}
+\begin{verbatim}
+SELECT dept_id, admission_year, COUNT(*) AS student_count
+FROM student
+GROUP BY dept_id, admission_year
+ORDER BY dept_id, admission_year;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{GROUP BY dept\_id, admission\_year}: forms a group for each distinct combination.
+    \item Students in the same department but different admission years belong to different groups.
+    \item \texttt{COUNT(*)}: reports the size of each combination group.
+    \item Both non-aggregate selected columns are listed in \texttt{GROUP BY}.
+\end{itemize}
+
+\subsection*{8.3 Filtering Groups with HAVING}
+\defbox{HAVING}{The \texttt{HAVING} clause evaluates a condition for each completed group and keeps
+only groups for which the condition is true.}
+
+\noindent\textbf{General syntax:}
+\begin{verbatim}
+SELECT grouping_column, aggregate_function(...)
+FROM table_name
+[WHERE row_condition]
+GROUP BY grouping_column
+HAVING group_condition
+[ORDER BY sort_expression];
+\end{verbatim}
+
+\begin{verbatim}
+SELECT course_id, COUNT(*) AS enrollment_count
+FROM enrollment
+GROUP BY course_id
+HAVING COUNT(*) >= 2
+ORDER BY enrollment_count DESC, course_id;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{GROUP BY course\_id}: creates one group for each course.
+    \item \texttt{COUNT(*)}: calculates the number of enrollments in each course group.
+    \item \texttt{HAVING COUNT(*) >= 2}: keeps only course groups containing at least two rows.
+    \item \texttt{ORDER BY enrollment\_count DESC}: sorts by the aggregate alias from largest to
+    smallest.
+    \item \texttt{course\_id}: breaks ties in ascending order.
+\end{itemize}
+
+\subsection*{8.4 WHERE Compared with HAVING}
+\begin{verbatim}
+SELECT dept_id, COUNT(*) AS active_student_count
+FROM student
+WHERE is_active = TRUE
+GROUP BY dept_id
+HAVING COUNT(*) >= 2
+ORDER BY dept_id;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item \texttt{WHERE is\_active = TRUE}: removes inactive rows before groups are formed.
+    \item \texttt{GROUP BY dept\_id}: groups only the active rows.
+    \item \texttt{HAVING COUNT(*) >= 2}: removes groups containing fewer than two active students.
+    \item \texttt{WHERE} answers ``which rows may enter a group?''
+    \item \texttt{HAVING} answers ``which completed groups may enter the result?''
+\end{itemize}
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{>{\bfseries}p{3cm} p{4.5cm} p{4.5cm}}
+\toprule
+Feature & WHERE & HAVING \\
+\midrule
+Works on & Individual source rows & Completed groups \\
+Logical timing & Before \texttt{GROUP BY} & After \texttt{GROUP BY} \\
+Aggregate use & Normally not allowed & Common and expected \\
+Typical condition & \texttt{is\_active = TRUE} & \texttt{COUNT(*) >= 2} \\
+Performance role & Reduces rows before grouping & Reduces groups after aggregation \\
+\bottomrule
+\end{tabular}
+\caption{Comparison of WHERE and HAVING}
+\label{tab:where_having}
+\end{table}
+
+% -------------------------------------------------------------
+% 9. Expressions
+% -------------------------------------------------------------
+\section*{9. Conditional and Null-Handling Expressions}
+
+\subsection*{9.1 Producing Categories with CASE}
+\noindent\textbf{General syntax:}
+\begin{verbatim}
+CASE
+    WHEN condition_1 THEN result_1
+    WHEN condition_2 THEN result_2
+    ELSE default_result
+END
+\end{verbatim}
+
+\noindent\textbf{Example usage:}
+\begin{verbatim}
+SELECT
+    student_id,
+    first_name,
+    admission_year,
+    CASE
+        WHEN admission_year >= 2023 THEN 'Recent'
+        WHEN admission_year >= 2021 THEN 'Continuing'
+        ELSE 'Senior'
+    END AS student_category
+FROM student
+ORDER BY student_id;
+\end{verbatim}
+
+\noindent\textbf{Expression breakdown:}
+\begin{itemize}
+    \item \texttt{CASE}: begins a conditional expression.
+    \item Each \texttt{WHEN}: states a condition tested from top to bottom.
+    \item \texttt{THEN}: supplies the value for the first true condition.
+    \item \texttt{ELSE}: supplies a value when no \texttt{WHEN} condition is true.
+    \item \texttt{END}: closes the expression.
+\end{itemize}
+
+\subsection*{9.2 Replacing NULL for Display with COALESCE}
+\begin{verbatim}
+SELECT
+    student_id,
+    first_name,
+    COALESCE(email, 'No email recorded') AS contact_email
+FROM student
+ORDER BY student_id;
+\end{verbatim}
+
+\noindent\textbf{Expression breakdown:}
+\begin{itemize}
+    \item \texttt{COALESCE(value\_1, value\_2, ...)}: returns the first non-null argument.
+    \item \texttt{email}: is used when the student record contains an email address.
+    \item \texttt{'No email recorded'}: is returned when the email value is null.
+    \item \texttt{COALESCE} changes the displayed result, not the stored value.
+\end{itemize}
+
+% -------------------------------------------------------------
+% 10. Set operations
+% -------------------------------------------------------------
+\section*{10. Combining Query Results with Set Operators}
+Set operators combine complete query results vertically. The participating queries must return the
+same number of columns, and corresponding columns must have compatible data types.
+
+\subsection*{10.1 UNION and UNION ALL}
+\begin{verbatim}
+SELECT first_name, last_name
+FROM student
+WHERE dept_id = 1
+
+UNION
+
+SELECT first_name, last_name
+FROM student
+WHERE admission_year = 2024
+ORDER BY first_name, last_name;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item The first \texttt{SELECT}: returns department 1 student names.
+    \item The second \texttt{SELECT}: returns students admitted in 2024.
+    \item \texttt{UNION}: combines both results and removes duplicate rows.
+    \item \texttt{UNION ALL}: may replace \texttt{UNION} when duplicates should be preserved.
+    \item The final \texttt{ORDER BY}: sorts the complete combined result.
+    \item Output column names come from the first query.
+\end{itemize}
+
+\subsection*{10.2 INTERSECT}
+\begin{verbatim}
+SELECT student_id
+FROM student
+WHERE dept_id = 1
+
+INTERSECT
+
+SELECT student_id
+FROM enrollment
+WHERE course_id = 1;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item The first query returns identifiers of department 1 students.
+    \item The second query returns identifiers of students enrolled in course 1.
+    \item \texttt{INTERSECT}: keeps identifiers that occur in both query results.
+\end{itemize}
+
+\subsection*{10.3 EXCEPT}
+\begin{verbatim}
+SELECT student_id
+FROM student
+
+EXCEPT
+
+SELECT student_id
+FROM enrollment;
+\end{verbatim}
+
+\noindent\textbf{Clause breakdown:}
+\begin{itemize}
+    \item The first query returns every student identifier.
+    \item The second query returns identifiers that appear in enrollment records.
+    \item \texttt{EXCEPT}: keeps students present in the first result but absent from the second.
+    \item Reversing the query order changes the meaning of \texttt{EXCEPT}.
+\end{itemize}
+
+% -------------------------------------------------------------
+% 11. Complete query
+% -------------------------------------------------------------
+\section*{11. Reading a Complete DQL Query}
+The following query combines row filtering, grouping, group filtering, sorting, and limiting.
+
+\begin{verbatim}
+SELECT
+    dept_id,
+    admission_year,
+    COUNT(*) AS active_students
+FROM student
+WHERE is_active = TRUE
+  AND dept_id IS NOT NULL
+GROUP BY dept_id, admission_year
+HAVING COUNT(*) >= 2
+ORDER BY active_students DESC, dept_id, admission_year
+LIMIT 3;
+\end{verbatim}
+
+\noindent\textbf{Clause-by-clause interpretation:}
+\begin{enumerate}
+    \item \texttt{FROM student}: supplies the source rows.
+    \item \texttt{WHERE is\_active = TRUE}: keeps only active students.
+    \item \texttt{dept\_id IS NOT NULL}: removes students without an assigned department.
+    \item \texttt{GROUP BY dept\_id, admission\_year}: creates one group for each department and
+    admission-year combination.
+    \item \texttt{COUNT(*) AS active\_students}: counts the rows inside each group.
+    \item \texttt{HAVING COUNT(*) >= 2}: keeps only groups with at least two active students.
+    \item \texttt{ORDER BY}: ranks larger groups first, then applies stable tie-breakers.
+    \item \texttt{LIMIT 3}: returns at most the first three ranked groups.
+\end{enumerate}
+
+% -------------------------------------------------------------
+% 12. Observations
+% -------------------------------------------------------------
+\section*{12. Observations}
+\begin{itemize}
+    \item \texttt{SELECT} retrieved stored columns and calculated expressions without changing
+    table data.
+    \item \texttt{WHERE} filtered individual rows before grouping.
+    \item \texttt{ORDER BY} established a defined result order.
+    \item \texttt{LIMIT} and \texttt{OFFSET} selected a portion of a sorted result.
+    \item Aggregate functions summarized complete tables and groups.
+    \item \texttt{GROUP BY} created one result row for each distinct grouping value.
+    \item \texttt{HAVING} filtered groups after aggregate values were available.
+    \item Set operators combined compatible query results.
+    \item Subqueries supplied values, sets, calculated columns, and table-like sources to outer
+    queries.
+\end{itemize}
+
+% -------------------------------------------------------------
+% 13. Lab Tasks
+% -------------------------------------------------------------
+\section*{13. Lab Task}
+
+\subsection*{Task A: Basic Retrieval and WHERE Practice}
+Using the \texttt{university\_lab} database, write and execute queries to:
+\begin{enumerate}
+    \item Display student identifiers, full names, and admission years.
+    \item Display all distinct admission years in descending order.
+    \item Find active students admitted from 2021 through 2023.
+    \item Find students whose first names begin with \texttt{M}, \texttt{N}, or \texttt{R}.
+    \item Find students who do not have a department.
+    \item Find courses belonging to departments 1, 2, or 4.
+    \item Add a short clause breakdown below each query.
+\end{enumerate}
+
+\subsection*{Task B: Sorting, LIMIT, and OFFSET}
+\begin{enumerate}
+    \item Display the five most recently admitted students. Use a stable tie-breaker.
+    \item Display the second page of students when each page contains three rows.
+    \item Display the three courses with the highest credit values, sorted by course code when
+    credits are equal.
+    \item Explain why each query requires \texttt{ORDER BY} before \texttt{LIMIT}.
+\end{enumerate}
+
+\subsection*{Task C: Aggregate, GROUP BY, and HAVING}
+\begin{enumerate}
+    \item Count all students and count only students with assigned departments.
+    \item Show the number of students in each department.
+    \item Show the number of students for each department and admission year combination.
+    \item Show only departments containing at least two active students.
+    \item Show courses with at least three enrollments.
+    \item Show each course's total enrollment count and number of assigned grades.
+    \item Explain which conditions belong in \texttt{WHERE} and which belong in \texttt{HAVING}.
+\end{enumerate}
+
+\subsection*{Task D: Online Shop DQL Problem}
+Assume an online shop database contains the tables \texttt{customer}, \texttt{product},
+\texttt{orders}, and \texttt{order\_item}. Write PostgreSQL queries to:
+\begin{itemize}
+    \item display products whose price is between two chosen values;
+    \item display the five products with the lowest stock;
+    \item calculate the number and total value of items in each order;
+    \item display only orders whose calculated value exceeds a chosen amount;
+    \item display customers who have never placed an order;
+\end{itemize}
+
+% -------------------------------------------------------------
+% 14. Conclusion
+% -------------------------------------------------------------
+\section*{14. Conclusion}
+This experiment introduced PostgreSQL Data Query Language through progressively structured
+\texttt{SELECT} statements. Students selected and calculated output values, filtered rows, sorted
+and limited results, summarized data, formed and filtered groups, and combined result sets.
+
+\end{document}
